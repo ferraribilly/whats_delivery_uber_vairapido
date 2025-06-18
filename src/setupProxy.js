@@ -4,7 +4,7 @@ module.exports = function (app) {
   app.use(
     '/api/v1',
     createProxyMiddleware({
-      target: 'https://ferraribback-end-clone-whatsapp.onrender.com',
+      target: 'https://corsbypass-xxxx.onrender.com/https://ferraribback-end-clone-whatsapp.onrender.com',
       changeOrigin: true,
     })
   );

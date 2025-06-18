@@ -19,11 +19,11 @@ function ChatHeader({ online, callUser, socket, typing }) {
   const { user } = useSelector((state) => state.user);
 
   return (
-    <div className="h-[59px] dark:bg-dark_bg_2 flex items-center p16 select-none">
+    <div className="h-[80px] dark:bg-dark_bg_2 flex items-center p16 select-none">
       {/*Container*/}
       <div className="w-full flex items-center justify-between">
         {/*left*/}
-        <div className="flex items-center gap-x-4">
+        <div className="flex items-center gap-x-8">
           {/*Conversation image*/}
           <button className="btn">
             <img

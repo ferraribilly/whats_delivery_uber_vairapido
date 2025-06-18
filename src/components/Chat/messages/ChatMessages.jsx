@@ -19,10 +19,6 @@ export default function ChatMessages({ typing }) {
 
       const notificationPermission = localStorage.getItem("notificationsAllowed");
 
-      // ✅ Toca som só se:
-      // 1. A mensagem é nova (ID diferente)
-      // 2. Foi enviada por outra pessoa
-      // 3. A mensagem chegou DEPOIS da conversa já estar aberta
       if (
         lastMessage._id !== lastMessageId &&
         lastMessage.sender._id !== user._id &&
@@ -30,13 +26,11 @@ export default function ChatMessages({ typing }) {
       ) {
         setLastMessageId(lastMessage._id);
 
-        // 🔊 Áudio
         const audio = new Audio("/audio/message-sound-on-android-whistle-on-samsung.mp3");
         audio.play().catch((err) => {
           console.error("Erro ao tocar áudio:", err);
         });
 
-        // 🔔 Push
         if (notificationPermission === "true" && Notification.permission === "granted") {
           new Notification("Nova mensagem", {
             body: lastMessage.message,
@@ -51,12 +45,26 @@ export default function ChatMessages({ typing }) {
     endRef.current.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Contador simples: contar mensagens enviadas por outros que ainda não foram lidas
+  // Aqui simulo que mensagem tem `read` boolean para simplificar
+  const unreadCount = messages?.filter(
+    (m) => !m.read && m.sender._id !== user._id
+  ).length;
+
   return (
     <div
-      className="mb-[60px] bg-[url('https://res.cloudinary.com/dmhcnhtng/image/upload/v1677358270/Untitled-1_copy_rpx8yb.jpg')]
+      className="mb-[60px] bg-[url('https://res.cloudinary.com/dptprh0xk/image/upload/v1750033614/ltjurhryru0gmwfjnugw.jpg')]
       bg-cover bg-no-repeat"
     >
-      <div className="scrollbar overflow_scrollbar overflow-auto py-2 px-[5%]">
+      <div className="px-4 py-1 sticky top-0 z-10 bg-gray-800 text-white flex justify-end">
+        {unreadCount > 0 && (
+          <div className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-sm">
+            {unreadCount}
+          </div>
+        )}
+      </div>
+
+      <div className="scrollbar overflow_scrollbar overflow-auto py-2 px-[15%]">
         {messages &&
           messages.map((message) => (
             <div key={message._id}>

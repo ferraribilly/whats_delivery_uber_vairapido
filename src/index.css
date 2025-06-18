@@ -4,8 +4,8 @@
 
 @layer components {
   .container {
-    width: calc(100% - 38px);
-    max-width: 1600px;
+    width: calc(100vw - 38px);
+    max-width: 100vw;
   }
   .flex0030 {
     flex: 0 0 30%;

@@ -10,7 +10,7 @@ export default function Message({ message, me }) {
     >
       {/*Message Container*/}
       <div className="relative">
-        {/* sender user message */}
+           {/* Foto de perfil (para todos: me e não-me) */}
         {!me && message.conversation.isGroup && (
           <div className="absolute top-0.5 left-[-37px]">
             <img

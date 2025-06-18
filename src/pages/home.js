@@ -14,6 +14,8 @@ import {
   getConversationName,
   getConversationPicture,
 } from "../utils/chat";
+import DevBurguer from "../components/DevBurguer/cardapio";
+import Maps from "../components/Maps/map";
 
 const callData = {
   socketId: "",
@@ -44,6 +46,12 @@ function Home({ socket }) {
   const connectionRef = useRef();
 
   const [typing, setTyping] = useState(false);
+
+  const [showSidebar, setShowSidebar] = useState(false); // FLAG pra mostrar sidebar
+
+  const [showCardapio, setShowCardapio] = useState(false); // FLAG pra mostrar cardápio
+
+  const [showMap, setShowMap] = useState(false); // FLAG pra mostrar o MAP
 
   useEffect(() => {
     socket.emit("join", user._id);
@@ -186,12 +194,44 @@ function Home({ socket }) {
   return (
     <>
       <div className="h-screen dark:bg-dark_bg_1 flex items-center justify-center overflow-hidden">
-        <div className="container h-screen flex py-[19px]">
-          <Sidebar onlineUsers={onlineUsers} typing={typing} />
-          {activeConversation._id ? (
-            <ChatContainer onlineUsers={onlineUsers} callUser={callUser} typing={typing} />
+        <div className="container h-screen flex py-[5px]">
+          {showSidebar && <Sidebar onlineUsers={onlineUsers} typing={typing} />}
+
+          {/* ----------- Lógica de exibição principal ----------- */}
+          {!showCardapio && !showMap ? (
+            activeConversation._id ? (
+              <ChatContainer
+                onlineUsers={onlineUsers}
+                callUser={callUser}
+                typing={typing}
+              />
+            ) : (
+              <WhatsappHome
+                setShowSidebar={setShowSidebar}
+                openCardapio={() => setShowCardapio(true)} // Abre o Cardápio
+                openMap={() => setShowMap(true)} // Abre o MAP
+              />
+            )
+          ) : showCardapio ? (
+            <div className="w-full h-full flex flex-col">
+              <button
+                onClick={() => setShowCardapio(false)}
+                className="m-4 px-4 py-2 bg-red-600 text-white rounded w-max"
+              >
+                Voltar ao Whatsapp
+              </button>
+              <DevBurguer />
+            </div>
           ) : (
-            <WhatsappHome />
+            <div className="w-full h-full flex flex-col">
+              <button
+                onClick={() => setShowMap(false)}
+                className="m-4 px-4 py-2 bg-blue-600 text-white rounded w-max"
+              >
+                Voltar ao Whatsapp
+              </button>
+              <Maps />
+            </div>
           )}
         </div>
       </div>
@@ -216,7 +256,9 @@ function Home({ socket }) {
 }
 
 const HomeWithSocket = (props) => (
-  <SocketContext.Consumer>{(socket) => <Home {...props} socket={socket} />}</SocketContext.Consumer>
+  <SocketContext.Consumer>
+    {(socket) => <Home {...props} socket={socket} />}
+  </SocketContext.Consumer>
 );
 
 export default HomeWithSocket;
