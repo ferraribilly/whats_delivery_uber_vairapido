@@ -13,7 +13,7 @@ export default function Cardapio() {
       descricao:
         "Pão levinho de fermentação natural, hamburger de 160g, queijo prato e maionese da casa.",
       preco: 28.9,
-      img: "./assets/img/hamb-1.png",
+      img: "/assets/img/hamb-1.png",
     },
     {
       id: 2,
@@ -22,7 +22,7 @@ export default function Cardapio() {
       descricao:
         "Pão levinho de fermentação natural, hamburger de 160g, queijo prato e maionese da casa.",
       preco: 18.9,
-      img: "./assets/img/hamb-2.png",
+      img: "/assets/img/hamb-2.png",
     },
     {
       id: 3,
@@ -31,48 +31,47 @@ export default function Cardapio() {
       descricao:
         "Pão levinho de fermentação natural, hamburger de 160g, queijo prato e maionese da casa.",
       preco: 32.9,
-      img: "./assets/img/hamb-3.png",
+      img: "/assets/img/hamb-3.png",
     },
-  
     {
       id: 4,
-      tipo: "bebida",
-      nome: "Suco Natural",
-      descricao: "Suco natural de laranja, 300ml.",
-      preco: 8.9,
-      img: "./assets/img/refri-2.png",
-    },
-    {
-      id: 5,
-      tipo: "bebida",
-      nome: "Suco Natural",
-      descricao: "Suco natural de laranja, 300ml.",
-      preco: 8.9,
-      img: "./assets/img/refri-2.png",
-    },
-    {
-      id: 6,
       tipo: "hamburguer",
       nome: "Cheese Salada",
       descricao: "Hamburger com queijo, alface, tomate e maionese da casa.",
       preco: 29.9,
-      img: "./assets/img/hamb-1.png",
+      img: "/assets/img/hamb-1.png",
     },
     {
-      id: 7,
+      id: 5,
       tipo: "hamburguer",
       nome: "X-Tudo",
       descricao: "Hamburger completo com tudo que você tem direito.",
       preco: 35.9,
-      img: "./assets/img/hamb-2.png",
+      img: "/assets/img/hamb-2.png",
     },
     {
-      id: 8,
+      id: 6,
       tipo: "hamburguer",
       nome: "Big Burguer",
       descricao: "Hamburger gigante para matar a fome de verdade.",
       preco: 33.9,
-      img: "./assets/img/hamb-3.png",
+      img: "/assets/img/hamb-3.png",
+    },
+    {
+      id: 7,
+      tipo: "bebida",
+      nome: "Suco Natural",
+      descricao: "Suco natural de laranja, 300ml.",
+      preco: 8.9,
+      img: "/assets/img/refri-2.png",
+    },
+    {
+      id: 8,
+      tipo: "bebida",
+      nome: "Suco Natural",
+      descricao: "Suco natural de laranja, 300ml.",
+      preco: 8.9,
+      img: "/assets/img/refri-2.png",
     },
     {
       id: 9,
@@ -80,7 +79,7 @@ export default function Cardapio() {
       nome: "Guaraná Antarctica",
       descricao: "Refrigerante tradicional bem gelado, 350ml.",
       preco: 7.9,
-      img: "./assets/img/refri-1.png",
+      img: "/assets/img/refri-1.png",
     },
     {
       id: 10,
@@ -88,51 +87,60 @@ export default function Cardapio() {
       nome: "Água Mineral",
       descricao: "Garrafa de água mineral sem gás, 500ml.",
       preco: 4.5,
-      img: "./assets/img/refri-2.png",
+      img: "/assets/img/refri-2.png",
     },
   ];
 
   function adicionarAoCarrinho(produto) {
-    setCart((oldCart) => {
-      const existe = oldCart.find((item) => item.id === produto.id);
-      if (existe) {
-        return oldCart.map((item) =>
-          item.id === produto.id
-            ? { ...item, quantidade: item.quantidade + 1 }
-            : item
-        );
-      } else {
-        return [...oldCart, { ...produto, quantidade: 1 }];
-      }
-    });
+    const itemExistente = cart.find((item) => item.id === produto.id);
+    if (itemExistente) {
+      const novoCarrinho = cart.map((item) =>
+        item.id === produto.id ? { ...item, quantidade: item.quantidade + 1 } : item
+      );
+      setCart(novoCarrinho);
+    } else {
+      setCart([...cart, { ...produto, quantidade: 1 }]);
+    }
   }
 
   function removerDoCarrinho(produto) {
-    setCart((oldCart) => {
-      const existe = oldCart.find((item) => item.id === produto.id);
-      if (existe.quantidade === 1) {
-        return oldCart.filter((item) => item.id !== produto.id);
-      } else {
-        return oldCart.map((item) =>
-          item.id === produto.id
-            ? { ...item, quantidade: item.quantidade - 1 }
-            : item
+    const itemExistente = cart.find((item) => item.id === produto.id);
+    if (itemExistente) {
+      if (itemExistente.quantidade > 1) {
+        const novoCarrinho = cart.map((item) =>
+          item.id === produto.id ? { ...item, quantidade: item.quantidade - 1 } : item
         );
+        setCart(novoCarrinho);
+      } else {
+        setCart(cart.filter((item) => item.id !== produto.id));
       }
-    });
+    }
   }
 
-  const calcularTotal = () => {
+  function calcularTotal() {
     return cart
-      .reduce((total, item) => total + item.preco * item.quantidade, 0)
+      .reduce((acc, item) => acc + item.preco * item.quantidade, 0)
       .toFixed(2);
-  };
+  }
 
   function enviarPedido(e) {
     e.preventDefault();
-    alert(
-      `Pedido enviado!\nTotal: R$ ${calcularTotal()}\nEndereço: ${endereco}`
-    );
+    const mensagem = cart
+      .map(
+        (item) =>
+          `${item.nome} - Quantidade: (${item.quantidade}) - Preço: R$ ${item.preco.toFixed(2)}`
+      )
+      .join("\n");
+
+    const total = `Total a Pagar: R$ ${calcularTotal()}`;
+    const enderecoFinal = `Endereço: ${endereco}`;
+
+    const linkWhatsApp = `https://wa.me/SEU_NUMERO?text=${encodeURIComponent(
+      mensagem + "\n" + total + "\n" + enderecoFinal
+    )}`;
+
+    window.open(linkWhatsApp, "_blank");
+
     setCart([]);
     setEndereco("");
     setMostrarFormulario(false);
