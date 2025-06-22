@@ -34,7 +34,7 @@ export default function ChatContainer({ onlineUsers, typing, callUser }) {
               ? false
               : checkOnlineStatus(onlineUsers, user, activeConversation.users)
           }
-          typing={typing} // <<< adicionamos aqui
+          typing={typing} 
           callUser={callUser}
         />
 

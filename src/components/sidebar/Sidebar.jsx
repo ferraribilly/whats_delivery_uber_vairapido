@@ -22,7 +22,7 @@ export default function Sidebar({ onlineUsers, typing }) {
         setSearchResults={setSearchResults}
       />
 
-      {searchResults.length > 0 ? (
+      {searchResults.length > -1 ? (
         <>
           {/* Search Results */}
           <SearchResults

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vai Rápido</title>
+
+  <style>
+    /* Só estilizando botão editar, adicionar e deletar */
+    .btn-editar,
+    .btn-deletar,
+    #btn-adicionar {
+      background-color: #2563eb; /* azul */
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.3s ease;
+      margin-left: 0.5rem;
+    }
+
+    .btn-editar:hover,
+    .btn-deletar:hover,
+    #btn-adicionar:hover {
+      background-color: #1e40af; /* azul mais escuro no hover */
+    }
+
+    .btn-deletar {
+      background-color: #dc2626; /* vermelho */
+    }
+
+    .btn-deletar:hover {
+      background-color: #991b1b;
+    }
+
+    #btn-adicionar {
+      background-color: #16a34a; /* verde */
+      margin-bottom: 1rem;
+    }
+
+    #btn-adicionar:hover {
+      background-color: #15803d;
+    }
+
+    /* Estilo básico modal */
+    #modal-edit {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    #modal-edit > div {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Inputs e textarea só pra ficar mais limpo */
+    #modal-edit input[type="text"],
+    #modal-edit input[type="number"],
+    #modal-edit textarea {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+
+    /* input file */
+    #edit-img {
+      padding: 0.2rem 0.3rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Botões no modal */
+    #modal-edit button {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      margin-left: 0.5rem;
+    }
+
+    #btn-cancelar {
+      background-color: #9ca3af; /* cinza */
+      color: white;
+    }
+
+    #btn-cancelar:hover {
+      background-color: #6b7280;
+    }
+
+    #btn-salvar {
+      background-color: #16a34a; /* verde */
+      color: white;
+    }
+
+    #btn-salvar:hover {
+      background-color: #15803d;
+    }
+
+    /* Layout produto */
+    .produto {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+
+    .produto > img.produto-img {
+      border-radius: 8px;
+      object-fit: cover;
+    }
+
+    .produto-info {
+      flex-grow: 1;
+    }
+
+    .produto-buttons {
+      display: flex;
+      align-items: center;
+    }
+  </style>
+</head>
+
+<body>
+  <h2>Editar Menu</h2>
+
+  <div id="menu">
+    <h2>Cardápio</h2>
+
+    <button id="btn-adicionar">Adicionar Produto</button>
+
+    <main id="produtos-cardapio">
+      <div class="produto">
+        <img src="assets/hamb-1.png" alt="Hamburguer Smash" class="produto-img" width="112" height="112" />
+        <div class="produto-info">
+          <p class="produto-nome">Hamburguer Smash</p>
+          <p class="produto-desc">Pão levinho de fermentação natural da Trigou, burger 160g, queijo prato e maionese da casa</p>
+          <p class="produto-preco">R$18.90</p>
+        </div>
+        <div class="produto-buttons">
+          <button class="btn-editar">Editar</button>
+          <button class="btn-deletar">Deletar</button>
+        </div>
+      </div>
+    </main>
+
+    <h2>Bebidas</h2>
+
+    <main id="produtos-bebidas">
+      <div class="produto">
+        <img src="assets/refri-1.png" alt="Coca-cola Lata" class="produto-img" width="112" height="112" />
+        <div class="produto-info">
+          <p class="produto-nome">Coca-cola Lata</p>
+          <p class="produto-desc">Refrigerante tradicional em lata</p>
+          <p class="produto-preco">R$6.00</p>
+        </div>
+        <div class="produto-buttons">
+          <button class="btn-editar">Editar</button>
+          <button class="btn-deletar">Deletar</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="modal-edit">
+    <div>
+      <h2 id="modal-title">Editar Produto</h2>
+
+      <label>Nome:</label>
+      <input type="text" id="edit-nome" />
+
+      <label>Descrição:</label>
+      <textarea id="edit-desc" rows="3"></textarea>
+
+      <label>Imagem (upload):</label>
+      <input type="file" id="edit-img" accept="image/*" />
+
+      <label>Preço (R$):</label>
+      <input type="number" step="0.01" id="edit-preco" />
+
+      <div style="text-align: right;">
+        <button id="btn-cancelar">Cancelar</button>
+        <button id="btn-salvar">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let produtoAtual = null;
+    let imagemLocalURL = null;
+    let modoAdicionar = false;
+
+    const modal = document.getElementById('modal-edit');
+    const tituloModal = document.getElementById('modal-title');
+
+    function abrirModalEditar(produto) {
+      modoAdicionar = false;
+      produtoAtual = produto;
+
+      tituloModal.textContent = 'Editar Produto';
+
+      document.getElementById('edit-nome').value = produto.querySelector('.produto-nome').textContent;
+      document.getElementById('edit-desc').value = produto.querySelector('.produto-desc').textContent || '';
+      document.getElementById('edit-preco').value = parseFloat(produto.querySelector('.produto-preco').textContent.replace('R$', '').trim());
+
+      // Limpar input file
+      const inputFile = document.getElementById('edit-img');
+      inputFile.value = '';
+      imagemLocalURL = null;
+
+      modal.style.display = 'flex';
+    }
+
+    function abrirModalAdicionar() {
+      modoAdicionar = true;
+      produtoAtual = null;
+
+      tituloModal.textContent = 'Adicionar Produto';
+
+      document.getElementById('edit-nome').value = '';
+      document.getElementById('edit-desc').value = '';
+      document.getElementById('edit-preco').value = '';
+      const inputFile = document.getElementById('edit-img');
+      inputFile.value = '';
+      imagemLocalURL = null;
+
+      modal.style.display = 'flex';
+    }
+
+    function fecharModal() {
+      if (imagemLocalURL) {
+        URL.revokeObjectURL(imagemLocalURL);
+        imagemLocalURL = null;
+      }
+      modal.style.display = 'none';
+      produtoAtual = null;
+      modoAdicionar = false;
+    }
+
+    function criarProduto(nome, desc, preco, imgSrc) {
+      const divProduto = document.createElement('div');
+      divProduto.classList.add('produto');
+
+      const img = document.createElement('img');
+      img.className = 'produto-img';
+      img.width = 112;
+      img.height = 112;
+      img.src = imgSrc || 'https://via.placeholder.com/112?text=Sem+Imagem';
+      img.alt = nome;
+
+      const divInfo = document.createElement('div');
+      divInfo.className = 'produto-info';
+
+      const pNome = document.createElement('p');
+      pNome.className = 'produto-nome';
+      pNome.textContent = nome;
+
+      const pDesc = document.createElement('p');
+      pDesc.className = 'produto-desc';
+      pDesc.textContent = desc;
+
+      const pPreco = document.createElement('p');
+      pPreco.className = 'produto-preco';
+      pPreco.textContent = `R$${preco.toFixed(2)}`;
+
+      divInfo.appendChild(pNome);
+      divInfo.appendChild(pDesc);
+      divInfo.appendChild(pPreco);
+
+      const divButtons = document.createElement('div');
+      divButtons.className = 'produto-buttons';
+
+      const btnEditar = document.createElement('button');
+      btnEditar.className = 'btn-editar';
+      btnEditar.textContent = 'Editar';
+      btnEditar.addEventListener('click', () => abrirModalEditar(divProduto));
+
+      const btnDeletar = document.createElement('button');
+      btnDeletar.className = 'btn-deletar';
+      btnDeletar.textContent = 'Deletar';
+      btnDeletar.addEventListener('click', () => {
+        if (confirm(`Deseja realmente deletar o produto "${nome}"?`)) {
+          divProduto.remove();
+        }
+      });
+
+      divButtons.appendChild(btnEditar);
+      divButtons.appendChild(btnDeletar);
+
+      divProduto.appendChild(img);
+      divProduto.appendChild(divInfo);
+      divProduto.appendChild(divButtons);
+
+      return divProduto;
+    }
+
+    // Event Listeners iniciais
+
+    // Botões editar existentes
+    document.querySelectorAll('.btn-editar').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const produto = btn.closest('.produto');
+        abrirModalEditar(produto);
+      });
+    });
+
+    // Botões deletar existentes
+    document.querySelectorAll('.btn-deletar').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const produto = btn.closest('.produto');
+        const nomeProduto = produto.querySelector('.produto-nome').textContent;
+        if (confirm(`Deseja realmente deletar o produto "${nomeProduto}"?`)) {
+          produto.remove();
+        }
+      });
+    });
+
+    // Botão adicionar
+    document.getElementById('btn-adicionar').addEventListener('click', () => {
+      abrirModalAdicionar();
+    });
+
+    // Upload de imagem no modal
+    document.getElementById('edit-img').addEventListener('change', (e) => {
+      if (imagemLocalURL) {
+        URL.revokeObjectURL(imagemLocalURL);
+        imagemLocalURL = null;
+      }
+      const file = e.target.files[0];
+      if (file) {
+        imagemLocalURL = URL.createObjectURL(file);
+      }
+    });
+
+    // Cancelar modal
+    document.getElementById('btn-cancelar').addEventListener('click', fecharModal);
+
+    // Salvar modal (editar ou adicionar)
+    document.getElementById('btn-salvar').addEventListener('click', () => {
+      const novoNome = document.getElementById('edit-nome').value.trim();
+      const novaDesc = document.getElementById('edit-desc').value.trim();
+      const novoPreco = parseFloat(document.getElementById('edit-preco').value);
+
+      if (!novoNome || isNaN(novoPreco)) {
+        alert('Preencha os campos corretamente!');
+        return;
+      }
+
+      if (modoAdicionar) {
+        // Criar novo produto e adicionar ao cardápio (exemplo: adicionar no Cardápio)
+        const novoProduto = criarProduto(novoNome, novaDesc, novoPreco, imagemLocalURL);
+        document.getElementById('produtos-cardapio').appendChild(novoProduto);
+      } else if (produtoAtual) {
+        // Editar produto existente
+        produtoAtual.querySelector('.produto-nome').textContent = novoNome;
+        produtoAtual.querySelector('.produto-desc').textContent = novaDesc;
+        produtoAtual.querySelector('.produto-preco').textContent = `R$${novoPreco.toFixed(2)}`;
+
+        if (imagemLocalURL) {
+          produtoAtual.querySelector('.produto-img').src = imagemLocalURL;
+          // Não libera URL aqui para manter imagem
+        }
+      }
+
+      fecharModal();
+      alert('Produto salvo com sucesso!');
+    });
+  </script>
+</body>
+
+</html>

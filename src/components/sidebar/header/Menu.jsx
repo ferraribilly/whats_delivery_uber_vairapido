@@ -12,13 +12,13 @@ export default function Menu({ setShowCreateGroup }) {
             className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3"
             onClick={() => setShowCreateGroup(true)}
           >
-            <span>New group</span>
+            <span>Ferramentas Prontas</span>
           </li>
           <li className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3">
-            <span>New community</span>
+            <span>Sobre Aplicativo</span>
           </li>
           <li className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3">
-            <span>Starred messaged</span>
+            <span></span>
           </li>
           <li className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3">
             <span>Settings</span>

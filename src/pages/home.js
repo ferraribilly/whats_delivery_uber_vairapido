@@ -14,8 +14,8 @@ import {
   getConversationName,
   getConversationPicture,
 } from "../utils/chat";
-import DevBurguer from "../components/DevBurguer/cardapio";
-import Maps from "../components/Maps/map";
+import DevBurguer from "../components/Estabelecimento/cardapio";
+import Maps from "../components/Uber/map";
 
 const callData = {
   socketId: "",

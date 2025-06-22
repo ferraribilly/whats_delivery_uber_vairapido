@@ -1,20 +1,14 @@
+import { useEffect } from "react";
 import { Logo } from "../../../svg";
 
-export default function WhatsappHome({ setShowSidebar, openCardapio, openMap, }) {
-  const handleDelivery = () => {
-    console.log("Abrir Cardápio Digital - Delivery");
-    if (openCardapio) {
-      openCardapio(); // chama a função para abrir o cardápio
-    }
-  };
+export default function WhatsappHome({ setShowSidebar }) {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSidebar(true);
+    }, 6000);
 
-  const handleMap = () => {
-    console.log("Abrir Map");
-    if (openMap) {
-      openMap();
-    }
-  
-  };
+    return () => clearTimeout(timer);
+  }, [setShowSidebar]);
 
   return (
     <div className="h-full w-full dark:bg-dark_bg_4 select-none border-l dark:border-l-dark_border_2 border-b-[6px] border-b-green_2">
@@ -30,37 +24,17 @@ export default function WhatsappHome({ setShowSidebar, openCardapio, openMap, })
             Whatsapp Ferrari Bussines
           </h1>
           <p className="text-sm dark:text-dark_text_3">
-            Whatsapp Ferrari Bussines.
+            Ferramenta poderosa na Palma das suas mãos por menor taxa.
             <br />
-            Use Whatsapp em seus sistemas Delivery, e Uber e Empresas.
+            Use Whatsapp Ferrari em seus Estabelecimento Empresas e Motorista de Aplicativos.
           </p>
         </div>
 
-        {/* Botões */}
-        <div className="flex flex-col gap-y-2 mt-4">
-          {/* Botão Sidebar */}
-          <button
-            onClick={() => setShowSidebar(true)}
-            className="px-4 py-2 bg-green_2 text-white rounded"
-          >
-            Abrir Sidebar
-          </button>
-
-          {/* Botão Delivery */}
-          <button
-            onClick={handleDelivery}
-            className="px-4 py-2 bg-blue-500 text-white rounded"
-          >
-            Delivery - Cardápio Digital
-          </button>
-
-          {/* Botão Uber */}
-          <button
-            onClick={handleMap}
-            className="px-4 py-2 bg-yellow-500 text-white rounded"
-          >
-            Uber - Em breve
-          </button>
+        {/* Barra de Carregamento Animada */}
+        <div className="flex flex-col gap-y-2 mt-4 w-64">
+          <div className="relative h-2 bg-gray-300 rounded overflow-hidden">
+            <div className="absolute top-0 left-0 h-full bg-green_2 animate-loading-bar"></div>
+          </div>
         </div>
       </div>
     </div>
