@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { ReturnIcon, ValidIcon } from "../../../../svg";
+import { ReturnIcon } from "../../../../svg"; // ValidIcon não está sendo usado
 
-// Importa todas as imagens da pasta assets/slogan
 const images = [
   "./assets/slogan/image1.png",
   "./assets/slogan/image2.png",
@@ -16,7 +15,7 @@ export default function CreateGroup({ setShowCreateGroup }) {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
-    }, 3000); // Troca a cada 3 segundos
+    }, 5000); // Troca a cada 5 segundos
 
     return () => clearInterval(interval);
   }, []);
@@ -34,11 +33,11 @@ export default function CreateGroup({ setShowCreateGroup }) {
 
       {/* Container com rolagem */}
       <div className="flex flex-col gap-4 p-4 overflow-y-auto max-h-full">
-        {/* Título Ferramentas */}
-        <h1 className="text-2xl font-bold mb-2">Ferramentas</h1>
+        {/* Título */}
+        <h1 className="text-2xl font-bold mb-2">Modelo Cardápio</h1>
 
-        {/* Imagem Animada - altura ajustada */}
-        <div className="w-full h-72 overflow-hidden rounded-lg shadow-md">
+        {/* Imagem Animada - altura aumentada */}
+        <div className="w-full h-[600px] overflow-hidden rounded-lg shadow-md">
           <img
             src={images[currentImageIndex]}
             alt="Slogan"
@@ -46,74 +45,16 @@ export default function CreateGroup({ setShowCreateGroup }) {
           />
         </div>
 
-        {/* Título das opções */}
-        <h2 className="text-xl font-semibold mt-4">Criar Novo Cadastro</h2>
+    {/* Link para Demonstração */}
+<div className="mt-4 flex justify-center">
+  <a
+    href="/demostracao"
+    className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-center"
+  >
+    Demonstração Estilo Cardápio Online
+  </a>
+</div>
 
-        {/* Opções */}
-        <button
-          className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition"
-          onClick={() => {
-            console.log("Criar Delivery");
-          }}
-        >
-          Criar Delivery
-        </button>
-
-        <button
-          className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition"
-          onClick={() => {
-            console.log("Criar Loja");
-          }}
-        >
-          Criar Loja
-        </button>
-
-        <button
-          className="bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600 transition"
-          onClick={() => {
-            console.log("Criar Empresa");
-          }}
-        >
-          Criar Empresa
-        </button>
-
-        <button
-          className="bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600 transition"
-          onClick={() => {
-            console.log("Criar Pizzaria");
-          }}
-        >
-          Criar Pizzaria
-        </button>
-
-        {/* Novas opções Uber */}
-        <button
-          className="bg-gray-700 text-white py-2 px-4 rounded hover:bg-gray-800 transition"
-          onClick={() => {
-            console.log("Criar Uber Moto");
-          }}
-        >
-          Criar Uber Moto
-        </button>
-
-        <button
-          className="bg-gray-900 text-white py-2 px-4 rounded hover:bg-black transition"
-          onClick={() => {
-            console.log("Criar Uber Carro");
-          }}
-        >
-          Criar Uber Carro
-        </button>
-
-        {/* Nova opção: Vendas de Conteúdos Digitais */}
-        <button
-          className="bg-pink-500 text-white py-2 px-4 rounded hover:bg-pink-600 transition"
-          onClick={() => {
-            console.log("Vendas de Conteúdos Digitais");
-          }}
-        >
-          Vendas de Conteúdos Digitais
-        </button>
       </div>
     </div>
   );

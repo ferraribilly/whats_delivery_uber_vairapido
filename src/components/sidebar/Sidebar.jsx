@@ -20,9 +20,10 @@ export default function Sidebar({ onlineUsers, typing }) {
       <Search
         searchLength={searchResults.length}
         setSearchResults={setSearchResults}
+        
       />
 
-      {searchResults.length > -1 ? (
+      {searchResults.length > 0 ? (
         <>
           {/* Search Results */}
           <SearchResults

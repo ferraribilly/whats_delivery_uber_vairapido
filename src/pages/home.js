@@ -14,8 +14,7 @@ import {
   getConversationName,
   getConversationPicture,
 } from "../utils/chat";
-import DevBurguer from "../components/Estabelecimento/cardapio";
-import Maps from "../components/Uber/map";
+
 
 const callData = {
   socketId: "",
@@ -49,9 +48,6 @@ function Home({ socket }) {
 
   const [showSidebar, setShowSidebar] = useState(false); // FLAG pra mostrar sidebar
 
-  const [showCardapio, setShowCardapio] = useState(false); // FLAG pra mostrar cardápio
-
-  const [showMap, setShowMap] = useState(false); // FLAG pra mostrar o MAP
 
   useEffect(() => {
     socket.emit("join", user._id);
@@ -198,7 +194,7 @@ function Home({ socket }) {
           {showSidebar && <Sidebar onlineUsers={onlineUsers} typing={typing} />}
 
           {/* ----------- Lógica de exibição principal ----------- */}
-          {!showCardapio && !showMap ? (
+          {!show && !show ? (
             activeConversation._id ? (
               <ChatContainer
                 onlineUsers={onlineUsers}
@@ -208,29 +204,17 @@ function Home({ socket }) {
             ) : (
               <WhatsappHome
                 setShowSidebar={setShowSidebar}
-                openCardapio={() => setShowCardapio(true)} // Abre o Cardápio
-                openMap={() => setShowMap(true)} // Abre o MAP
+              
               />
             )
-          ) : showCardapio ? (
+          ) : show ? (
             <div className="w-full h-full flex flex-col">
-              <button
-                onClick={() => setShowCardapio(false)}
-                className="m-4 px-4 py-2 bg-red-600 text-white rounded w-max"
-              >
-                Voltar ao Whatsapp
-              </button>
-              <DevBurguer />
+           
+             
             </div>
           ) : (
             <div className="w-full h-full flex flex-col">
-              <button
-                onClick={() => setShowMap(false)}
-                className="m-4 px-4 py-2 bg-blue-600 text-white rounded w-max"
-              >
-                Voltar ao Whatsapp
-              </button>
-              <Maps />
+             
             </div>
           )}
         </div>
