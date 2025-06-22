@@ -28,6 +28,7 @@
     "react-hook-form": "^7.43.5",
     "react-icons": "^5.5.0",
     "react-leaflet": "^4.2.1",
+    "react-native-communications": "^2.2.1",
     "react-native-webrtc": "^124.0.5",
     "react-player": "^2.16.0",
     "react-redux": "^8.0.5",

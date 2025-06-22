@@ -18,6 +18,7 @@ function ChatHeader({ online, callUser, socket, typing }) {
   const { activeConversation } = useSelector((state) => state.chat);
   const { user } = useSelector((state) => state.user);
 
+
   return (
     <div className="h-[80px] dark:bg-white flex items-center p16 select-none">
       {/*Container*/}

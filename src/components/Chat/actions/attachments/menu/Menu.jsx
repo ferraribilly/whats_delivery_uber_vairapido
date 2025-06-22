@@ -1,12 +1,11 @@
 import {
-  CameraIcon,
   ContactIcon,
-  DocumentIcon,
   PollIcon,
   StickerIcon,
 } from "../../../../../svg";
 import DocumentAttachment from "./DocumentAttachment";
 import PhotoAttachment from "./PhotoAttachment";
+import CameraAttachment from "./CameraAttachment"
 
 
 
@@ -18,6 +17,7 @@ export default function Menu() {
           <PollIcon />
         </button>
       </li>
+      
       <li>
         <button type="button" className="bg-[#0EABF4] rounded-full">
           <ContactIcon />
@@ -26,7 +26,7 @@ export default function Menu() {
       <DocumentAttachment />
       <li>
         <button type="button" className="bg-[#D3396D] rounded-full">
-          <CameraIcon />
+           <CameraAttachment />
         </button>
       </li>
       <li>
