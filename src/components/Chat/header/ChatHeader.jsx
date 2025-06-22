@@ -19,7 +19,7 @@ function ChatHeader({ online, callUser, socket, typing }) {
   const { user } = useSelector((state) => state.user);
 
   return (
-    <div className="h-[80px] dark:bg-dark_bg_2 flex items-center p16 select-none">
+    <div className="h-[80px] dark:bg-white flex items-center p16 select-none">
       {/*Container*/}
       <div className="w-full flex items-center justify-between">
         {/*left*/}
@@ -38,7 +38,7 @@ function ChatHeader({ online, callUser, socket, typing }) {
           </button>
           {/*Conversation name and online status*/}
           <div className="flex flex-col">
-            <h1 className="dark:text-white text-md font-bold">
+            <h1 className="dark:text-dark text-md font-bold">
               {activeConversation.isGroup
                 ? activeConversation.name
                 : capitalize(
@@ -47,7 +47,7 @@ function ChatHeader({ online, callUser, socket, typing }) {
                     )[0]
                   )}
             </h1>
-            <span className="text-xs dark:text-dark_svg_2">
+            <span className="text-xs dark:text-gold">
               {typing ? "digitando..." : online ? "online" : ""}
             </span>
           </div>
@@ -71,6 +71,7 @@ function ChatHeader({ online, callUser, socket, typing }) {
           <li>
             <button className="btn">
               <SearchLargeIcon className="dark:fill-dark_svg_1" />
+              
             </button>
           </li>
           <li>

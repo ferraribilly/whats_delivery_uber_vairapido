@@ -2,9 +2,7 @@ import { useSelector } from "react-redux";
 import { ChatIcon, CommunityIcon, DotsIcon, StoryIcon } from "../../../svg";
 import { useState } from "react";
 import Menu from "./Menu";
-// Importar CreateGroup como exportação nomeada
 import { CreateGroup } from "./createGroup";
-// Dados parece estar ok, mantendo
 import Dados from "./createGroup/Dados";
 // import RegisterUber from "../../../pages/registeruber";
 // import RegisterEstabelecimento from "../../../pages/registerestabelecimento";

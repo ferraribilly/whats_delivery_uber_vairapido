@@ -10,8 +10,8 @@ export default function Message({ message, me }) {
     >
       {/*Message Container*/}
       <div className="relative">
-           {/* Foto de perfil (para todos: me e não-me) */}
-        {!me && message.conversation.isGroup && (
+        {/* Foto de perfil (mostra sempre que não for você) */}
+        {!me && (
           <div className="absolute top-0.5 left-[-37px]">
             <img
               src={message.sender.picture}
@@ -20,25 +20,28 @@ export default function Message({ message, me }) {
             />
           </div>
         )}
+
         <div
-          className={`relative h-full dark:text-dark_text_1 p-2 rounded-lg
-        ${me ? "bg-green_3" : "dark:bg-dark_bg_2"}
-        `}
+          className={`relative h-full dark:text-dark_text_1 p-2 rounded-lg ${
+            me ? "bg-green_3" : "dark:bg-dark_bg_2"
+          }`}
         >
-          {/*Message*/}
+          {/*Mensagem*/}
           <p className="float-left h-full text-sm pb-4 pr-8">
             {message.message}
           </p>
-          {/*Message Date*/}
-          <span className="absolute right-1.5 bottom-1.5 text-xs text-dark_text_5 leading-none">
+
+          {/*Data e hora*/}
+          <span className="absolute right-1.5 bottom-1.5 text-xs text-gold leading-none">
             {moment(message.createdAt).format("HH:mm")}
           </span>
-          {/*Traingle*/}
-          {!me ? (
+
+          {/*Triângulo para mensagens recebidas*/}
+          {!me && (
             <span>
               <TraingleIcon className="dark:fill-dark_bg_2 rotate-[60deg] absolute top-[-5px] -left-1.5" />
             </span>
-          ) : null}
+          )}
         </div>
       </div>
     </div>
