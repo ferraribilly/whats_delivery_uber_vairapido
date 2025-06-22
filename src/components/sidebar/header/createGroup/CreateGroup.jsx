@@ -48,7 +48,7 @@ export default function CreateGroup({ setShowCreateGroup }) {
     {/* Link para Demonstração */}
 <div className="mt-4 flex justify-center">
   <a
-    href="/demostracao"
+    href="https://vai-rapido-uber.netlify.app/"
     className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-center"
   >
     Demonstração Estilo Cardápio Online
