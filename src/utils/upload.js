@@ -32,3 +32,19 @@ const uploadToCloudinary = async (formData) => {
       });
   });
 };
+
+const uploadAudioToCloudinary = async (formData) => {
+  return new Promise(async (resolve) => {
+    return await axios
+      .post(
+        `https://api.cloudinary.com/v1_1/${cloud_name}/audio/upload`,
+        formData
+      )
+      .then(({ data }) => {
+        resolve(data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  });
+};

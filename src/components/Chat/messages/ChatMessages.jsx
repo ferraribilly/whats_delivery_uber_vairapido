@@ -16,7 +16,6 @@ export default function ChatMessages({ typing }) {
 
     if (messages?.length > 0) {
       const lastMessage = messages[messages.length - 1];
-
       const notificationPermission = localStorage.getItem("notificationsAllowed");
 
       if (
@@ -33,7 +32,7 @@ export default function ChatMessages({ typing }) {
 
         if (notificationPermission === "true" && Notification.permission === "granted") {
           new Notification("Nova mensagem", {
-            body: lastMessage.message,
+            body: lastMessage.message || "Áudio recebido",
             icon: lastMessage.sender.picture,
           });
         }
@@ -45,36 +44,33 @@ export default function ChatMessages({ typing }) {
     endRef.current.scrollIntoView({ behavior: "smooth" });
   };
 
- 
-
   return (
     <div
-   className="mb-[60px] bg-[url('https://res.cloudinary.com/dmhcnhtng/image/upload/v1677358270/Untitled-1_copy_rpx8yb.jpg')]
+      className="mb-[60px] bg-[url('https://res.cloudinary.com/dmhcnhtng/image/upload/v1677358270/Untitled-1_copy_rpx8yb.jpg')]
       bg-cover bg-no-repeat"
     >
-      {/*  */}
-
       <div className="scrollbar overflow_scrollbar overflow-auto py-2 px-[12%]">
         {messages &&
           messages.map((message) => (
             <div key={message._id}>
-              {message.files.length > 0
-                ? message.files.map((file) => (
-                    <FileMessage
-                      FileMessage={file}
-                      message={message}
-                      key={message._id + file.url}
-                      me={user._id === message.sender._id}
-                    />
-                  ))
-                : null}
-              {message.message.length > 0 ? (
+              {message.files.length > 0 &&
+                message.files.map((file) => (
+                  <FileMessage
+                    FileMessage={file}
+                    message={message}
+                    key={message._id + file.url}
+                    me={user._id === message.sender._id}
+                  />
+                ))}
+
+              {/* Mostra texto ou áudio */}
+              {(message.message.length > 0 || message.type === "audio") && (
                 <Message
                   message={message}
                   key={message._id + "_text"}
                   me={user._id === message.sender._id}
                 />
-              ) : null}
+              )}
             </div>
           ))}
         {typing === activeConversation._id ? <Typing /> : null}

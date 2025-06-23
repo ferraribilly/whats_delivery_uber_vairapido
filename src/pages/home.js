@@ -1,4 +1,3 @@
-// ... seus imports
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Peer from "simple-peer";
@@ -43,6 +42,7 @@ function Home({ socket }) {
   const userVideo = useRef();
   const connectionRef = useRef();
 
+  // Ao montar, entra na sala e recebe usuários online
   useEffect(() => {
     socket.emit("join", user._id);
 
@@ -55,6 +55,7 @@ function Home({ socket }) {
     };
   }, [user, socket]);
 
+  // Setup da câmera/mic, eventos do socket para chamadas
   useEffect(() => {
     const setup = async () => {
       try {
@@ -64,7 +65,7 @@ function Home({ socket }) {
         });
         setStream(localStream);
         if (myVideo.current) {
-          myVideo.current.srcObject = localStream;
+          myVideo.current.srcObject = localStream; // seta o stream local na video tag
         }
       } catch (err) {
         console.error("Erro ao acessar câmera/microfone:", err);
@@ -89,11 +90,11 @@ function Home({ socket }) {
 
     socket.on("call accepted", (signal) => {
       setCallAccepted(true);
-      connectionRef.current?.signal(signal);
+      if (connectionRef.current) connectionRef.current.signal(signal);
     });
 
     socket.on("end call", () => {
-      endCall(true); // chamada forçada
+      endCall(true); // chamada finalizada pelo outro
     });
 
     return () => {
@@ -104,6 +105,7 @@ function Home({ socket }) {
     };
   }, [socket]);
 
+  // Iniciar a chamada
   const callUser = () => {
     if (!stream) return;
 
@@ -132,15 +134,17 @@ function Home({ socket }) {
 
     peer.on("stream", (remoteStream) => {
       if (userVideo.current) {
-        userVideo.current.srcObject = remoteStream;
+        userVideo.current.srcObject = remoteStream; // atribui o stream remoto
       }
     });
 
     connectionRef.current = peer;
   };
 
+  // Responder chamada recebida
   const answerCall = () => {
     if (!stream) return;
+
     setCallAccepted(true);
     setShow(true);
 
@@ -156,7 +160,7 @@ function Home({ socket }) {
 
     peer.on("stream", (remoteStream) => {
       if (userVideo.current) {
-        userVideo.current.srcObject = remoteStream;
+        userVideo.current.srcObject = remoteStream; // atribui o stream remoto
       }
     });
 
@@ -164,6 +168,7 @@ function Home({ socket }) {
     connectionRef.current = peer;
   };
 
+  // Finaliza a chamada
   const endCall = (external = false) => {
     setShow(false);
     setCall((prev) => ({ ...prev, callEnded: true, receiveingCall: false }));
@@ -179,12 +184,15 @@ function Home({ socket }) {
       connectionRef.current = null;
     }
 
+    // Para e limpa o stream local
     if (myVideo.current?.srcObject) {
       myVideo.current.srcObject.getTracks().forEach((track) => track.stop());
       myVideo.current.srcObject = null;
     }
 
+    // Limpa o stream remoto
     if (userVideo.current?.srcObject) {
+      userVideo.current.srcObject.getTracks().forEach((track) => track.stop());
       userVideo.current.srcObject = null;
     }
   };
