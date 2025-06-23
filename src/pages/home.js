@@ -1,3 +1,4 @@
+// ... seus imports
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Peer from "simple-peer";
@@ -15,7 +16,6 @@ import {
   getConversationPicture,
 } from "../utils/chat";
 
-
 const callData = {
   socketId: "",
   receiveingCall: false,
@@ -29,25 +29,19 @@ function Home({ socket }) {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user);
   const { activeConversation } = useSelector((state) => state.chat);
-  const [onlineUsers, setOnlineUsers] = useState([]);
 
+  const [onlineUsers, setOnlineUsers] = useState([]);
   const [call, setCall] = useState(callData);
   const [stream, setStream] = useState();
   const [show, setShow] = useState(false);
-
-  const { receiveingCall, callEnded, socketId } = call;
-
   const [callAccepted, setCallAccepted] = useState(false);
   const [totalSecInCall, setTotalSecInCall] = useState(0);
+  const [typing, setTyping] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
 
   const myVideo = useRef();
   const userVideo = useRef();
   const connectionRef = useRef();
-
-  const [typing, setTyping] = useState(false);
-
-  const [showSidebar, setShowSidebar] = useState(false); // FLAG pra mostrar sidebar
-
 
   useEffect(() => {
     socket.emit("join", user._id);
@@ -55,10 +49,28 @@ function Home({ socket }) {
     socket.on("get-online-users", (users) => {
       setOnlineUsers(users);
     });
+
+    return () => {
+      socket.off("get-online-users");
+    };
   }, [user, socket]);
 
   useEffect(() => {
-    setupMedia();
+    const setup = async () => {
+      try {
+        const localStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
+        setStream(localStream);
+        if (myVideo.current) {
+          myVideo.current.srcObject = localStream;
+        }
+      } catch (err) {
+        console.error("Erro ao acessar câmera/microfone:", err);
+      }
+    };
+    setup();
 
     socket.on("setup socket", (id) => {
       setCall((prev) => ({ ...prev, socketId: id }));
@@ -75,23 +87,32 @@ function Home({ socket }) {
       });
     });
 
-    socket.on("end call", () => {
-      setShow(false);
-      setCall((prev) => ({ ...prev, callEnded: true, receiveingCall: false }));
-      if (myVideo.current) myVideo.current.srcObject = null;
-      if (callAccepted && connectionRef.current) {
-        connectionRef.current.destroy();
-      }
+    socket.on("call accepted", (signal) => {
+      setCallAccepted(true);
+      connectionRef.current?.signal(signal);
     });
-  }, [callAccepted, socket]);
+
+    socket.on("end call", () => {
+      endCall(true); // chamada forçada
+    });
+
+    return () => {
+      socket.off("setup socket");
+      socket.off("call user");
+      socket.off("call accepted");
+      socket.off("end call");
+    };
+  }, [socket]);
 
   const callUser = () => {
-    enableMedia();
+    if (!stream) return;
+
     setCall((prev) => ({
       ...prev,
       name: getConversationName(user, activeConversation.users),
       picture: getConversationPicture(user, activeConversation.users),
     }));
+    setShow(true);
 
     const peer = new Peer({
       initiator: true,
@@ -103,27 +124,26 @@ function Home({ socket }) {
       socket.emit("call user", {
         userToCall: getConversationId(user, activeConversation.users),
         signal: data,
-        from: socketId,
+        from: call.socketId,
         name: user.name,
         picture: user.picture,
       });
     });
 
-    peer.on("stream", (stream) => {
-      userVideo.current.srcObject = stream;
-    });
-
-    socket.on("call accepted", (signal) => {
-      setCallAccepted(true);
-      peer.signal(signal);
+    peer.on("stream", (remoteStream) => {
+      if (userVideo.current) {
+        userVideo.current.srcObject = remoteStream;
+      }
     });
 
     connectionRef.current = peer;
   };
 
   const answerCall = () => {
-    enableMedia();
+    if (!stream) return;
     setCallAccepted(true);
+    setShow(true);
+
     const peer = new Peer({
       initiator: false,
       trickle: false,
@@ -134,36 +154,39 @@ function Home({ socket }) {
       socket.emit("answer call", { signal: data, to: call.socketId });
     });
 
-    peer.on("stream", (stream) => {
-      userVideo.current.srcObject = stream;
+    peer.on("stream", (remoteStream) => {
+      if (userVideo.current) {
+        userVideo.current.srcObject = remoteStream;
+      }
     });
 
     peer.signal(call.signal);
     connectionRef.current = peer;
   };
 
-  const endCall = () => {
+  const endCall = (external = false) => {
     setShow(false);
     setCall((prev) => ({ ...prev, callEnded: true, receiveingCall: false }));
-    if (myVideo.current) myVideo.current.srcObject = null;
-    socket.emit("end call", call.socketId);
-    if (connectionRef.current) connectionRef.current.destroy();
-  };
+    setCallAccepted(false);
+    setTotalSecInCall(0);
 
-  const setupMedia = () => {
-    navigator.mediaDevices
-      .getUserMedia({ video: true, audio: true })
-      .then((stream) => {
-        setStream(stream);
-      })
-      .catch(() => {
-        // handle permission denied or error
-      });
-  };
+    if (!external) {
+      socket.emit("end call", call.socketId);
+    }
 
-  const enableMedia = () => {
-    if (myVideo.current) myVideo.current.srcObject = stream;
-    setShow(true);
+    if (connectionRef.current) {
+      connectionRef.current.destroy();
+      connectionRef.current = null;
+    }
+
+    if (myVideo.current?.srcObject) {
+      myVideo.current.srcObject.getTracks().forEach((track) => track.stop());
+      myVideo.current.srcObject = null;
+    }
+
+    if (userVideo.current?.srcObject) {
+      userVideo.current.srcObject = null;
+    }
   };
 
   useEffect(() => {
@@ -193,8 +216,7 @@ function Home({ socket }) {
         <div className="container h-screen flex py-[5px]">
           {showSidebar && <Sidebar onlineUsers={onlineUsers} typing={typing} />}
 
-          {/* ----------- Lógica de exibição principal ----------- */}
-          {!show && !show ? (
+          {!show ? (
             activeConversation._id ? (
               <ChatContainer
                 onlineUsers={onlineUsers}
@@ -202,25 +224,15 @@ function Home({ socket }) {
                 typing={typing}
               />
             ) : (
-              <WhatsappHome
-                setShowSidebar={setShowSidebar}
-              
-              />
+              <WhatsappHome setShowSidebar={setShowSidebar} />
             )
-          ) : show ? (
-            <div className="w-full h-full flex flex-col">
-           
-             
-            </div>
           ) : (
-            <div className="w-full h-full flex flex-col">
-             
-            </div>
+            <div className="w-full h-full flex flex-col"></div>
           )}
         </div>
       </div>
 
-      <div className={(show || call.signal) && !call.callEnded ? "" : "hidden"}>
+      <div className={(show || call.receiveingCall) && !call.callEnded ? "" : "hidden"}>
         <Call
           call={call}
           setCall={setCall}

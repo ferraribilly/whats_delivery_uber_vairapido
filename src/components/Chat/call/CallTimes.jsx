@@ -6,42 +6,37 @@ export default function CallTimes({
   callAccepted,
 }) {
   useEffect(() => {
-    const setSecInCall = () => {
-      setTotalSecInCall((prev) => prev + 1);
-      setTimeout(setSecInCall, 1000);
-    };
+    let interval;
     if (callAccepted) {
-      setSecInCall();
+      interval = setInterval(() => {
+        setTotalSecInCall((prev) => prev + 1);
+      }, 1000);
     }
-    return () => setTotalSecInCall(0);
+    return () => {
+      clearInterval(interval);
+      setTotalSecInCall(0);
+    };
   }, [callAccepted]);
+
   return (
     <div
       className={`text-dark_text_2 ${
         totalSecInCall !== 0 ? "block" : "hidden"
       }`}
     >
-      {parseInt(totalSecInCall / 3600 >= 0) ? (
+      {parseInt(totalSecInCall / 3600) > 0 && (
         <>
           <span>
-            {parseInt(totalSecInCall / 3600).toString().length < 2
-              ? "0" + parseInt(totalSecInCall / 3600)
-              : parseInt(totalSecInCall / 3600)}
+            {String(parseInt(totalSecInCall / 3600)).padStart(2, "0")}
           </span>
           <span>:</span>
         </>
-      ) : null}
+      )}
       <span>
-        {parseInt(totalSecInCall / 60).toString().length < 2
-          ? "0" + parseInt(totalSecInCall / 60)
-          : parseInt(totalSecInCall / 60)}
+        {String(parseInt((totalSecInCall / 60) % 60)).padStart(2, "0")}
       </span>
       <span>:</span>
-      <span>
-        {(totalSecInCall % 60).toString().length < 2
-          ? "0" + (totalSecInCall % 60)
-          : totalSecInCall % 60}
-      </span>
+      <span>{String(totalSecInCall % 60).padStart(2, "0")}</span>
     </div>
   );
 }

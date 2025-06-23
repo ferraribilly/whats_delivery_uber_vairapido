@@ -56,7 +56,7 @@ export default function CameraAttachment() {
         hidden
         ref={inputRef}
         accept="image/*,video/*"
-        capture="environment" // usa câmera traseira, ou "user" para frontal
+        capture="environment" 
         onChange={imageHandler}
       />
     </li>
