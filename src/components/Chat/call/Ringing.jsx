@@ -1,26 +1,28 @@
 import { useEffect, useState } from "react";
 import { CloseIcon, ValidIcon } from "../../../svg";
-
 export default function Ringing({ call, setCall, answerCall, endCall }) {
   const { receiveingCall, callEnded, name, picture } = call;
   const [timer, setTimer] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
+  let interval;
+  const handleTimer = () => {
+    interval = setInterval(() => {
       setTimer((prev) => prev + 1);
     }, 1000);
-
-    if (timer >= 30) {
+  };
+  console.log(timer);
+  useEffect(() => {
+    if (timer <= 30) {
+      handleTimer();
+    } else {
       setCall({ ...call, receiveingCall: false });
-      clearInterval(interval);
     }
-
     return () => clearInterval(interval);
   }, [timer]);
-
   return (
-    <div className="dark:bg-dark_bg_1 rounded-lg fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-lg z-30">
+    <div className="dark:bg-dark_bg_1 rounded-lg fixed  top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-lg z-30">
+      {/*Container*/}
       <div className="p-4 flex items-center justify-between gap-x-8">
+        {/*Call infos*/}
         <div className="flex items-center gap-x-2">
           <img
             src={picture}
@@ -34,6 +36,7 @@ export default function Ringing({ call, setCall, answerCall, endCall }) {
             <span className="dark:text-dark_text_2">Whatsapp video...</span>
           </div>
         </div>
+        {/*Call actions*/}
         <ul className="flex items-center gap-x-2">
           <li onClick={endCall}>
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-red-500">
@@ -47,7 +50,8 @@ export default function Ringing({ call, setCall, answerCall, endCall }) {
           </li>
         </ul>
       </div>
-      <audio src="../../../../audio/ringtone.mp3" autoPlay loop />
+      {/*Ringtone*/}
+      <audio src="../../../../audio/ringtone.mp3" autoPlay loop></audio>
     </div>
   );
 }

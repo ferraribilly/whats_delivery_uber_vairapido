@@ -2,36 +2,56 @@ import { useSelector } from "react-redux";
 
 export default function FileViewer({ activeIndex }) {
   const { files } = useSelector((state) => state.chat);
+  const file = files[activeIndex];
+  if (!file) return null;
+
+  const isImage = file.type === "IMAGE";
+  const isVideo = file.type === "VIDEO";
+
+  const fileUrl = file.fileData || (file.file ? URL.createObjectURL(file.file) : "");
+
+  const handleOpenFile = () => {
+    if (fileUrl) {
+      window.open(fileUrl, "_blank");
+    }
+  };
+
   return (
     <div className="w-full max-w-[60%]">
-      {/*Container */}
       <div className="flex justify-center items-center">
-        {files[activeIndex].type === "IMAGE" ? (
+        {isImage ? (
           <img
-            src={files[activeIndex].fileData}
+            src={fileUrl}
             alt=""
             className="max-w-[80%] object-contain hview"
+            onClick={handleOpenFile}
+            style={{ cursor: "pointer" }}
           />
-        ) : files[activeIndex].type === "VIDEO" ? (
+        ) : isVideo ? (
           <video
-            src={files[activeIndex].fileData}
+            src={fileUrl}
             controls
             className="max-w-[80%] object-contain hview"
-          ></video>
+            onClick={handleOpenFile}
+            style={{ cursor: "pointer" }}
+          />
         ) : (
-          <div className="min-w-full hview flex flex-col items-center justify-center">
-            {/* File Icon Image */}
+          <div
+            className="min-w-full hview flex flex-col items-center justify-center cursor-pointer"
+            onClick={handleOpenFile}
+          >
             <img
-              src={`../../../../images/file/${files[activeIndex].type}.png`}
-              alt={files[activeIndex].type}
+              src={`../../../../images/file/${file.type}.png`}
+              alt={file.type}
+              className="w-12 h-12 mb-2"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "../../../../images/file/ZIP.png";
+              }}
             />
-            {/*No preview text*/}
-            <h1 className="dark:text-dark_text_2 text-2xl">
-              No preview available
-            </h1>
-            {/*File size / type*/}
-            <span className="dark:text-dark_text_2">
-              {files[activeIndex]?.file?.size} kB - {files[activeIndex]?.type}
+            <h1 className="dark:text-dark_text_2 text-2xl">Clique para abrir</h1>
+            <span className="dark:text-dark_text_2 text-sm mt-1">
+              {file?.file?.name} - {file?.file?.size} bytes
             </span>
           </div>
         )}

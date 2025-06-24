@@ -1,6 +1,6 @@
 import Contact from "./Contact";
 
-export default function SearchResults({ searchResults, setSearchResults, setShowSidebar }) {
+export default function SearchResults({ searchResults, setSearchResults }) {
   return (
     <div className="w-full convos scrollbar">
       <div>
@@ -17,7 +17,6 @@ export default function SearchResults({ searchResults, setSearchResults, setShow
                 contact={user}
                 key={user._id}
                 setSearchResults={setSearchResults}
-                setShowSidebar={setShowSidebar} 
               />
             ))}
         </ul>

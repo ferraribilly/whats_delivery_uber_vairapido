@@ -8,19 +8,15 @@ import {
 } from "react-router-dom";
 import { io } from "socket.io-client";
 import SocketContext from "./context/SocketContext";
-
-// Pages
+//Pages
 import Home from "./pages/home";
 import Login from "./pages/login";
 import Register from "./pages/register";
-import FormEstabelecimento from "./pages/registerestabelecimento";
-import FormUber from "./pages/registeruber";
-
-
-// socket io
+//socket io
 const socket = io(process.env.REACT_APP_API_ENDPOINT.split("/api/v1")[0]);
 
 function App() {
+  //const [connected, setConnected] = useState(false);
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user);
   const { token } = user;
@@ -46,18 +42,6 @@ function App() {
               exact
               path="/register"
               element={!token ? <Register /> : <Navigate to="/" />}
-            />
-            {/* ✅ ROTA /formestabelecimento */}
-            <Route
-              exact
-              path="/formestabelecimento"
-              element={!token ? <FormEstabelecimento /> : <Navigate to="/" />}
-            />
-            {/* ✅ ROTA /formuber */}
-            <Route
-              exact
-              path="/formuber"
-              element={!token ? <FormUber /> : <Navigate to="/" />}
             />
           </Routes>
         </Router>

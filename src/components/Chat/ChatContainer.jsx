@@ -7,7 +7,7 @@ import ChatHeader from "./header/ChatHeader";
 import ChatMessages from "./messages/ChatMessages";
 import FilesPreview from "./preview/files/FilesPreview";
 
-export default function ChatContainer({ onlineUsers, typing, callUser }) {
+export default function ChatContainer({ onlineUsers, typing, callUser, onBack }) {
   const dispatch = useDispatch();
   const { activeConversation, files } = useSelector((state) => state.chat);
   const { user } = useSelector((state) => state.user);
@@ -25,30 +25,28 @@ export default function ChatContainer({ onlineUsers, typing, callUser }) {
   }, [activeConversation]);
 
   return (
-    <div className="relative w-full h-full border-l dark:border-l-dark_border_2 select-none overflow-hidden ">
-      <div>
-        {/* Chat header */}
-        <ChatHeader
-          online={
-            activeConversation.isGroup
-              ? false
-              : checkOnlineStatus(onlineUsers, user, activeConversation.users)
-          }
-          typing={typing} 
-          callUser={callUser}
-        />
+    <div className="relative w-full  h-full select-none overflow-hidden">
+      {/* Header com botão de voltar */}
+      <ChatHeader
+        online={
+          activeConversation.isGroup
+            ? false
+            : checkOnlineStatus(onlineUsers, user, activeConversation.users)
+        }
+        callUser={callUser}
+        onBack={onBack} // ✅ Botão de voltar funcionando
+      />
 
-        {files.length > 0 ? (
-          <FilesPreview />
-        ) : (
-          <>
-            {/* Chat messages */}
-            <ChatMessages typing={typing} />
-            {/* Chat Actions */}
-            <ChatActions />
-          </>
-        )}
-      </div>
+      {files.length > 0 ? (
+        <FilesPreview />
+      ) : (
+        <>
+          {/* Mensagens */}
+          <ChatMessages typing={typing} />
+          {/* Ações */}
+          <ChatActions />
+        </>
+      )}
     </div>
   );
 }

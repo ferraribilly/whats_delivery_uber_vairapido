@@ -12,10 +12,11 @@ export const getFileType = (memType) => {
       return "PPTX";
     case "application/vnd.ms-excel":
     case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-      return "XLSX ";
+      return "XLSX";
     case "application/vnd.rar":
       return "RAR";
     case "application/zip":
+    case "application/x-zip-compressed":
       return "ZIP";
     case "audio/mpeg":
     case "audio/wav":

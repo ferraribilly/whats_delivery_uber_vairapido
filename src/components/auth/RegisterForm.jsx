@@ -44,16 +44,15 @@ export default function RegisterForm() {
       }
     }
   };
-
   const uploadImage = async () => {
-  let formData = new FormData();
-  formData.append("file", picture); 
-  formData.append("upload_preset", "vaiturbo"); 
-  const { data } = await axios.post(
-    `https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`,
-    formData
-  );
-  return data;
+    let formData = new FormData();
+    formData.append("upload_preset", cloud_secret);
+    formData.append("file", picture);
+    const { data } = await axios.post(
+      `https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`,
+      formData
+    );
+    return data;
   };
   return (
     <div className="min-h-screen w-full flex items-center justify-center overflow-hidden">

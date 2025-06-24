@@ -2,7 +2,7 @@ import { useDispatch } from "react-redux";
 import { logout } from "../../../features/userSlice";
 import { useState } from "react";
 
-export default function Menu({ setShowCreateGroup, setShowDados }) {
+export default function Menu({ setShowCreateGroup }) {
   const dispatch = useDispatch();
   return (
     <>
@@ -10,29 +10,20 @@ export default function Menu({ setShowCreateGroup, setShowDados }) {
         <ul>
           <li
             className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3"
-            onClick={() => setShowDados(true)}
-          >
-            <span>Meus dados salvos</span>
-          </li>
-
-          <li
-            className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3"
             onClick={() => setShowCreateGroup(true)}
           >
-            <span>Criar meu Comercio</span>
-          </li>
-
-          <li className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3">
-            <span>
-              Ser Motorista Aplicativo</span>
+            <span>Minha Conta</span>
           </li>
           
           <li className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3">
-            <span>
-            Vender Conteudos
-            </span>
+            <span>Meus Acessos App</span>
           </li>
-
+          <li className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3">
+            <span>Favoritos</span>
+          </li>
+          <li className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3">
+            <span>Settings</span>
+          </li>
           <li
             className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3"
             onClick={() => dispatch(logout())}

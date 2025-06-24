@@ -13,7 +13,7 @@ function Input({ message, setMessage, textRef, socket }) {
       socket.emit("typing", activeConversation._id);
     }
     let lastTypingTime = new Date().getTime();
-    let timer = 500;
+    let timer = 1000;
     setTimeout(() => {
       let timeNow = new Date().getTime();
       let timeDiff = timeNow - lastTypingTime;

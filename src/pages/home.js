@@ -28,93 +28,60 @@ function Home({ socket }) {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user);
   const { activeConversation } = useSelector((state) => state.chat);
-
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [showSidebar, setShowSidebar] = useState(false);
+
+  // call
   const [call, setCall] = useState(callData);
   const [stream, setStream] = useState();
   const [show, setShow] = useState(false);
+  const { socketId } = call;
   const [callAccepted, setCallAccepted] = useState(false);
   const [totalSecInCall, setTotalSecInCall] = useState(0);
-  const [typing, setTyping] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(false);
-
   const myVideo = useRef();
   const userVideo = useRef();
   const connectionRef = useRef();
 
-  // Ao montar, entra na sala e recebe usuários online
+  // typing
+  const [typing, setTyping] = useState(false);
+
   useEffect(() => {
     socket.emit("join", user._id);
-
     socket.on("get-online-users", (users) => {
       setOnlineUsers(users);
     });
+  }, [user]);
 
-    return () => {
-      socket.off("get-online-users");
-    };
-  }, [user, socket]);
-
-  // Setup da câmera/mic, eventos do socket para chamadas
   useEffect(() => {
-    const setup = async () => {
-      try {
-        const localStream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        });
-        setStream(localStream);
-        if (myVideo.current) {
-          myVideo.current.srcObject = localStream; // seta o stream local na video tag
-        }
-      } catch (err) {
-        console.error("Erro ao acessar câmera/microfone:", err);
-      }
-    };
-    setup();
-
+    setupMedia();
     socket.on("setup socket", (id) => {
       setCall((prev) => ({ ...prev, socketId: id }));
     });
-
     socket.on("call user", (data) => {
       setCall({
+        ...call,
         socketId: data.from,
         name: data.name,
         picture: data.picture,
         signal: data.signal,
         receiveingCall: true,
-        callEnded: false,
       });
     });
-
-    socket.on("call accepted", (signal) => {
-      setCallAccepted(true);
-      if (connectionRef.current) connectionRef.current.signal(signal);
-    });
-
     socket.on("end call", () => {
-      endCall(true); // chamada finalizada pelo outro
+      setShow(false);
+      setCall({ ...call, callEnded: true, receiveingCall: false });
+      myVideo.current.srcObject = null;
+      if (callAccepted) connectionRef?.current?.destroy();
     });
+  }, []);
 
-    return () => {
-      socket.off("setup socket");
-      socket.off("call user");
-      socket.off("call accepted");
-      socket.off("end call");
-    };
-  }, [socket]);
-
-  // Iniciar a chamada
   const callUser = () => {
-    if (!stream) return;
-
-    setCall((prev) => ({
-      ...prev,
+    enableMedia();
+    setCall({
+      ...call,
       name: getConversationName(user, activeConversation.users),
       picture: getConversationPicture(user, activeConversation.users),
-    }));
-    setShow(true);
+    });
 
     const peer = new Peer({
       initiator: true,
@@ -126,27 +93,27 @@ function Home({ socket }) {
       socket.emit("call user", {
         userToCall: getConversationId(user, activeConversation.users),
         signal: data,
-        from: call.socketId,
+        from: socketId,
         name: user.name,
         picture: user.picture,
       });
     });
 
     peer.on("stream", (remoteStream) => {
-      if (userVideo.current) {
-        userVideo.current.srcObject = remoteStream; // atribui o stream remoto
-      }
+      userVideo.current.srcObject = remoteStream;
+    });
+
+    socket.on("call accepted", (signal) => {
+      setCallAccepted(true);
+      peer.signal(signal);
     });
 
     connectionRef.current = peer;
   };
 
-  // Responder chamada recebida
   const answerCall = () => {
-    if (!stream) return;
-
+    enableMedia();
     setCallAccepted(true);
-    setShow(true);
 
     const peer = new Peer({
       initiator: false,
@@ -159,70 +126,59 @@ function Home({ socket }) {
     });
 
     peer.on("stream", (remoteStream) => {
-      if (userVideo.current) {
-        userVideo.current.srcObject = remoteStream; // atribui o stream remoto
-      }
+      userVideo.current.srcObject = remoteStream;
     });
 
     peer.signal(call.signal);
     connectionRef.current = peer;
   };
 
-  // Finaliza a chamada
-  const endCall = (external = false) => {
+  const endCall = () => {
     setShow(false);
-    setCall((prev) => ({ ...prev, callEnded: true, receiveingCall: false }));
-    setCallAccepted(false);
-    setTotalSecInCall(0);
+    setCall({ ...call, callEnded: true, receiveingCall: false });
+    myVideo.current.srcObject = null;
+    socket.emit("end call", call.socketId);
+    connectionRef?.current?.destroy();
+  };
 
-    if (!external) {
-      socket.emit("end call", call.socketId);
-    }
+  const setupMedia = () => {
+    navigator.mediaDevices
+      .getUserMedia({ video: true, audio: true })
+      .then((mediaStream) => {
+        setStream(mediaStream);
+      });
+  };
 
-    if (connectionRef.current) {
-      connectionRef.current.destroy();
-      connectionRef.current = null;
-    }
-
-    // Para e limpa o stream local
-    if (myVideo.current?.srcObject) {
-      myVideo.current.srcObject.getTracks().forEach((track) => track.stop());
-      myVideo.current.srcObject = null;
-    }
-
-    // Limpa o stream remoto
-    if (userVideo.current?.srcObject) {
-      userVideo.current.srcObject.getTracks().forEach((track) => track.stop());
-      userVideo.current.srcObject = null;
-    }
+  const enableMedia = () => {
+    myVideo.current.srcObject = stream;
+    setShow(true);
   };
 
   useEffect(() => {
     if (user?.token) {
       dispatch(getConversations(user.token));
     }
-  }, [user, dispatch]);
+  }, [user]);
 
   useEffect(() => {
     socket.on("receive message", (message) => {
       dispatch(updateMessagesAndConversations(message));
     });
-
-    socket.on("typing", (conversation) => setTyping(conversation));
+    socket.on("typing", (conversationId) => setTyping(conversationId));
     socket.on("stop typing", () => setTyping(false));
-
-    return () => {
-      socket.off("receive message");
-      socket.off("typing");
-      socket.off("stop typing");
-    };
-  }, [dispatch, socket]);
+  }, []);
 
   return (
     <>
       <div className="h-screen dark:bg-dark_bg_1 flex items-center justify-center overflow-hidden">
         <div className="container h-screen flex py-[5px]">
-          {showSidebar && <Sidebar onlineUsers={onlineUsers} typing={typing} />}
+          {showSidebar && (
+            <Sidebar
+              onlineUsers={onlineUsers}
+              typing={typing}
+              onCloseSidebar={() => setShowSidebar(false)} // ✅ aqui agora tá certo
+            />
+          )}
 
           {!show ? (
             activeConversation._id ? (
@@ -230,16 +186,19 @@ function Home({ socket }) {
                 onlineUsers={onlineUsers}
                 callUser={callUser}
                 typing={typing}
+                onBack={() => setShowSidebar(true)} 
+
               />
             ) : (
               <WhatsappHome setShowSidebar={setShowSidebar} />
             )
           ) : (
-            <div className="w-full h-full flex flex-col"></div>
+            <div className="w-full h-full flex flex-col" />
           )}
         </div>
       </div>
 
+      {/* Call */}
       <div className={(show || call.receiveingCall) && !call.callEnded ? "" : "hidden"}>
         <Call
           call={call}
