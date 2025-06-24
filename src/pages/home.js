@@ -14,6 +14,7 @@ import {
   getConversationName,
   getConversationPicture,
 } from "../utils/chat";
+import { Search } from "../components/sidebar/search";
 
 const callData = {
   socketId: "",
@@ -176,7 +177,7 @@ function Home({ socket }) {
             <Sidebar
               onlineUsers={onlineUsers}
               typing={typing}
-              onCloseSidebar={() => setShowSidebar(false)} // ✅ aqui agora tá certo
+              onCloseSidebar={() => setShowSidebar(false)} 
             />
           )}
 
@@ -195,6 +196,7 @@ function Home({ socket }) {
           ) : (
             <div className="w-full h-full flex flex-col" />
           )}
+          
         </div>
       </div>
 

@@ -1,3 +1,4 @@
-import CreateGroup from "./CreateGroup";
+import MinhaConta from "./MinhaConta";
+import Favoritos from "./Favoritos";
 
-export { CreateGroup };
+export { MinhaConta, Favoritos };

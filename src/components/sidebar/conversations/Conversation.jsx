@@ -55,13 +55,14 @@ function Conversation({ convo, socket, online, typing, onClick }) {
               className="w-full  h-full object-cover"
             />
           </div>
-
+          {/*Conversation name and message*/}
           <div className="w-full flex flex-col">
             <h1 className="font-bold flex items-center gap-x-2">
               {convo.isGroup
                 ? convo.name
                 : capitalize(getConversationName(user, convo.users))}
             </h1>
+            {/* Conversation message */}
             <div>
               <div className="flex items-center gap-x-1 dark:text-dark_text_2">
                 <div className="flex-1 dark:text-dark_text_2">
@@ -79,7 +80,7 @@ function Conversation({ convo, socket, online, typing, onClick }) {
             </div>
           </div>
         </div>
-
+         {/*Right*/}
         <div className="flex flex-col gap-y-4 items-end text-xs">
           <span className="dark:text-dark_text_2">
             {convo.latestMessage?.createdAt
@@ -88,7 +89,7 @@ function Conversation({ convo, socket, online, typing, onClick }) {
           </span>
         </div>
       </div>
-
+        {/*Border*/}
       <div className="ml-16 border-b dark:border-b-dark_border_1"></div>
     </li>
   );

@@ -3,7 +3,7 @@ import { checkOnlineStatus, getConversationId } from "../../../utils/chat";
 import Conversation from "./Conversation";
 
 
-export default function Conversations({ onlineUsers, typing, onSelectConversation }) {
+export default function Conversations({ onlineUsers, typing, onSelectConversation , onConversationClick}) {
   const { conversations, activeConversation } = useSelector(
     (state) => state.chat
   );
@@ -22,13 +22,16 @@ export default function Conversations({ onlineUsers, typing, onSelectConversatio
             )
             .map((convo) => {
               let check = checkOnlineStatus(onlineUsers, user, convo.users);
+               const otherUserId = getConversationId(user, convo.users);
+               const isOnline = onlineUsers.some((u) => u.userId === otherUserId);
               return (
                 <Conversation
                   key={convo._id}
                   convo={convo}
                   online={!convo.isGroup && check ? true : false}
                   typing={typing}
-                  onClick={onSelectConversation} // 👈 repassa pra Sidebar fechar
+                  onClick={onSelectConversation}
+                  onConversationClick={onConversationClick}
                 />
               );
             })}
