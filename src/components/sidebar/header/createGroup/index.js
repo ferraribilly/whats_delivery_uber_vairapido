@@ -1,4 +1,6 @@
 import MinhaConta from "./MinhaConta";
-import Favoritos from "./Favoritos";
+import FerramentasUber from "./FerramentasUber";
+import FerramentasComercio from "./FerramentasComercio";
+import SobreUsoApp from "./SobreUsoApp"
 
-export { MinhaConta, Favoritos };
+export { MinhaConta, FerramentasComercio, FerramentasUber, SobreUsoApp };

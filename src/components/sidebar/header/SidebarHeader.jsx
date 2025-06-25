@@ -3,14 +3,18 @@ import { ChatIcon, CommunityIcon, DotsIcon, StoryIcon } from "../../../svg";
 import { useState } from "react";
 import Menu from "./Menu";
 import { MinhaConta } from "./createGroup";
-import Favoritos from "./createGroup/Favoritos";
+import FerramentasUber from "./createGroup/FerramentasUber";
+import FerramentasComercio from "./createGroup/FerramentasComercio";
+import SobreUsoApp from "./createGroup/SobreUsoApp";
 
 
 export default function SidebarHeader() {
   const { user } = useSelector((state) => state.user);
   const [showMenu, setShowMenu] = useState(false);
   const [showMinhaConta, setShowMinhaConta] = useState(false);
-  const [showFavoritos, setShowFavoritos] = useState(false);
+  const [showSobreUsoApp, setShowSobreUsoApp] = useState(false);
+  const [showFerramentasComercio, setShowFerramentasComercio] = useState(false);
+  const [showFerramentasUber, setShowFerramentasUber] = useState(false);
   
   // Controle para caixa do CommunityIcon
   const [showVehicleSelector, setShowVehicleSelector] = useState(false);
@@ -121,7 +125,9 @@ export default function SidebarHeader() {
               {showMenu && (
                 <Menu
                   setShowMinhaConta={setShowMinhaConta}
-                  setShowFavoritos={setShowFavoritos}
+                  setShowFerramentasComercio={setShowFerramentasComercio}
+                  setShowFerramentasUber={setShowFerramentasUber}
+                  setShowSobreUsoApp={setShowSobreUsoApp}
                   setShowMenu={setShowMenu}
                 />
               )}
@@ -135,8 +141,14 @@ export default function SidebarHeader() {
         <MinhaConta setShowMinhaConta={setShowMinhaConta} />
       )}
 
-      {/* Favoritos */}
-      {showFavoritos && <Favoritos setShowFavoritos={setShowFavoritos} />}
+      {/* Sobre App */}
+      {showSobreUsoApp && <SobreUsoApp setShowSobreUsoApp={setShowSobreUsoApp} />}
+
+      {/* Ferramentas Comercio */}
+      {showFerramentasComercio && <FerramentasComercio setShowFerramentasComercio={setShowFerramentasComercio} />}
+
+        {/* Ferramentas Uber */}
+      {showFerramentasUber && <FerramentasUber setShowFerramentasUber={setShowFerramentasUber} />}
 
     
     </>

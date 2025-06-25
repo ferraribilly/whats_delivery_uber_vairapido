@@ -5,6 +5,7 @@ import { Notifications } from "./notifications";
 import { Search } from "./search";
 import { SearchResults } from "./search";
 
+
 export default function Sidebar({ onlineUsers, typing, onCloseSidebar }) {
   const [searchResults, setSearchResults] = useState([]);
   const [showSidebar, setShowSidebar] = useState(true);
@@ -14,6 +15,7 @@ export default function Sidebar({ onlineUsers, typing, onCloseSidebar }) {
   return (
    <div className="w-full h-full select-none bg-dark_bg_2 fixed top-0 left-0 z-50">
       <SidebarHeader />
+      
       <Notifications />
       <Search
         searchLength={searchResults.length}
@@ -34,6 +36,8 @@ export default function Sidebar({ onlineUsers, typing, onCloseSidebar }) {
          onSelectConversation={onCloseSidebar}
         />
       )}
+
+      
     </div>
   );
 }
