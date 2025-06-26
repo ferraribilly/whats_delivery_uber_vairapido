@@ -15,6 +15,10 @@ export default function FerramentasUber({setShowFerramentasUber}) {
       <form className="space-y-6 bg-dark_bg_2 p-6 rounded-xl shadow-lg max-w-md mx-auto">
         <h2 className="text-xl font-bold text-white mb-4">Minhas Ferramentas</h2>
         
+        
+
+
+        
 
 
       </form>

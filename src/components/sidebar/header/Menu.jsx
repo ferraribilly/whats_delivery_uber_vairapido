@@ -28,7 +28,7 @@ export default function Menu({ setShowMinhaConta, setShowFerramentasUber, setSho
       
 
         {/* Mostra só se status for "Comercio" */}
-        {status === "Comercio" && (
+        {status === "uber" && (
           <li
             className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3"
             onClick={() => setShowFerramentasComercio(true)}

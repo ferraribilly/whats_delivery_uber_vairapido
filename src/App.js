@@ -12,11 +12,16 @@ import SocketContext from "./context/SocketContext";
 import Home from "./pages/home";
 import Login from "./pages/login";
 import Register from "./pages/register";
+import EscolherPerfil from "./pages/escolherperfil"
+import RegisterEmpresas from "./pages/registerempresas";
+import RegisterUber from "./pages/registeruber";
+import RegisterComercios from "./pages/registercomercios";
+import RegisterChatPrivado from "./pages/registerchatprivado";
+import Store from "./components/auth/Store";
 //socket io
 const socket = io(process.env.REACT_APP_API_ENDPOINT.split("/api/v1")[0]);
 
 function App() {
-  //const [connected, setConnected] = useState(false);
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user);
   const { token } = user;
@@ -35,13 +40,43 @@ function App() {
             />
             <Route
               exact
-              path="/login"
-              element={!token ? <Login /> : <Navigate to="/" />}
+              path="/escolherperfil"
+              element={!token ? <EscolherPerfil /> : <Navigate to="/" />}
             />
             <Route
               exact
               path="/register"
               element={!token ? <Register /> : <Navigate to="/" />}
+            />
+            <Route
+              exact
+              path="/registerchatprivado"
+              element={!token ? <RegisterChatPrivado /> : <Navigate to="/" />}
+            />
+            <Route
+              exact
+              path="/registeruber"
+              element={!token ? <RegisterUber /> : <Navigate to="/" />}
+            />
+            <Route
+              exact
+              path="/registercomercios"
+              element={!token ? <RegisterComercios /> : <Navigate to="/" />}
+            />
+            <Route
+              exact
+              path="/registerempresas"
+              element={!token ? <RegisterEmpresas /> : <Navigate to="/" />}
+            />
+            <Route
+              exact
+              path="/assinatura"
+              element={!token ? <Store /> : <Navigate to="/" />}
+            />
+            <Route
+              exact
+              path="/login"
+              element={!token ? <Login /> : <Navigate to="/" />}
             />
           </Routes>
         </Router>

@@ -14,7 +14,11 @@ const cloud_secret = process.env.REACT_APP_CLOUD_SECRET;
 
 
 
-export default function RegisterForm() {
+
+
+export default function Register() {
+
+  
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { status, error } = useSelector((state) => state.user);
@@ -64,7 +68,7 @@ export default function RegisterForm() {
       <div className="w-full max-w-md space-y-8 p-10  rounded-xl">
         {/*Heading*/}
         <div className="text-center dark:text-dark_text_1">
-          <h2 className="mt-6 text-3xl font-bold">Welcome Clients</h2>
+          <h2 className="mt-6 text-3xl font-bold">Empresas</h2>
           <p className="mt-2 text-sm">Sign up</p>
         </div>
         {/*Form*/}
