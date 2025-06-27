@@ -1,9 +1,10 @@
 export default function UberIcon({ className }) {
   return (
     <img
-      src="/assets/img/Uber.svg"
+      src="/assets/img/logovaiRapidoUber.png"
       alt="Uber Icon"
-      className={className}
+      className={`scale-150 ${className}`}
+      
     />
   );
 }

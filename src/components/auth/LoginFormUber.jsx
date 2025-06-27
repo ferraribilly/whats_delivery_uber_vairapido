@@ -71,7 +71,7 @@ export default function RegisterForm() {
             alt="Logo Vai Rápido"
             className="w-48 h-32 mx-auto mb-0 blinking-logo"
           />
-          <h1 className="mt-1 text-1xl font-bold">Empresa Inovadora Franca-SP</h1>
+          <h1 className="mt-1 text-1xl font-bold">Seu sistema mais rápido e lucrativo</h1>
           <p className="mt-2 text-sm">Sign in</p>
         </div>
 

@@ -95,29 +95,10 @@ export default function EscolherPerfil() {
             </Link>
           </p>
 
-        {/* FOOTER - SSL + ÍCONES */}
+        
         <div className="flex flex-col items-center justify-center mt-10 text-center text-md dark:text-dark_text_1">
-          <img
-            src="/assets/img/ssl.png"
-            alt="Certificado SSL"
-            className="w-24 h-auto mt-4"
-          />
           <div className="flex items-center justify-center gap-4 mt-4 flex-wrap">
-            <img
-              src="/assets/img/mercado-pago-seeklogo.png"
-              alt="Android"
-              className="w-12 h-12"
-            />
-            <img
-              src="/assets/img/ios.png"
-              alt="iOS"
-              className="w-12 h-12"
-            />
-            <img
-              src="/assets/img/web.png"
-              alt="Web React/Next"
-              className="w-12 h-12"
-            />
+         
           </div>
         </div>
       </div>

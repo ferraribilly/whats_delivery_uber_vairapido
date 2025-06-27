@@ -97,12 +97,7 @@ export default function RegisterForm() {
             register={register}
             error={errors?.password?.message}
           />
-          {/* Picture */}
-          <Picture
-            readablePicture={readablePicture}
-            setReadablePicture={setReadablePicture}
-            setPicture={setPicture}
-          />
+        
           {/*if we have an error*/}
           {error ? (
             <div>

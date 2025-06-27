@@ -11,7 +11,26 @@ import Picture from "./Picture";
 import axios from "axios";
 const cloud_name = process.env.REACT_APP_CLOUD_NAME;
 const cloud_secret = process.env.REACT_APP_CLOUD_SECRET;
+// Tailwind custom style injection para animação
+const style = `
+@keyframes blinkColor {
+  0% { color: #10b981; }
+  50% { color: #3b82f6; }
+  100% { color: #10b981; }
+}
+.blinking-link {
+  animation: blinkColor 1s infinite;
+}
 
+@keyframes blinkLogo {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+.blinking-logo {
+  animation: blinkLogo 1.5s infinite;
+}
+`;
 
 
 
@@ -62,13 +81,21 @@ export default function Register() {
   );
   return data;
   };
+  
   return (
     <div className="min-h-screen w-full flex items-center justify-center overflow-hidden">
       {/* Container */}
       <div className="w-full max-w-md space-y-8 p-10  rounded-xl">
         {/*Heading*/}
+         {/* ✅ LOGO DA EMPRESA COM ANIMAÇÃO */}
+          <img
+            src="/assets/img/Pandas.svg"
+            alt="Logo Ferramenta Pandas"
+            
+            className="w-48 h-32 mx-auto mb-0 blinking-logo"
+          />
         <div className="text-center dark:text-dark_text_1">
-          <h2 className="mt-6 text-3xl font-bold">Empresas</h2>
+          <h2 className="mt-6 text-3xl font-bold">Rh</h2>
           <p className="mt-2 text-sm">Sign up</p>
         </div>
         {/*Form*/}

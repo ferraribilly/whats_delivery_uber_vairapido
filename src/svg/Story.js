@@ -1,19 +1,9 @@
 export default function StoryIcon({ className, active }) {
-  if (active) {
-    return (
-      <img
-        src="/assets/img/ifood.ico"
-        alt="Story Active Icon"
-        className={className}
-      />
-    );
-  } else {
-    return (
-      <img
-        src="/assets/img/ifood.ico"
-        alt="Story Default Icon"
-        className={className}
-      />
-    );
-  }
+  return (
+    <img
+      src="/assets/img/logovaiRapidoCardapioOnlines.png"
+      alt={active ? "Story Active Icon" : "Story Default Icon"}
+      className={`scale-150 ${className}`}
+    />
+  );
 }

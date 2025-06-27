@@ -107,12 +107,12 @@ export default function SidebarHeader() {
               )}
             </li>
 
-            {/* Botão ChatIcon */}
+            {/* Botão ChatIcon
             <li>
               <button className="btn">
                 <ChatIcon className="dark:fill-dark_svg_1" />
               </button>
-            </li>
+            </li> */}
 
             {/* Menu com 3 pontinhos */}
             <li
