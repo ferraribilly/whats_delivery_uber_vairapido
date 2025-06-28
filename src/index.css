@@ -5,9 +5,9 @@
 
 html,
 body {
-  overscroll-behavior: none;
-  touch-action: none;
+  overscroll-behavior-y: contain;
 }
+
 
 
 
