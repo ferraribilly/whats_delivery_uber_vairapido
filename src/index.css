@@ -3,6 +3,13 @@
 @tailwind utilities;
 @import 'leaflet/dist/leaflet.css';
 
+html,
+body {
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+
 
 @layer components {
   .container {
