@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../../features/userSlice";
 
-export default function Menu({ setShowMinhaConta, setShowFerramentasUber, setShowFerramentasComercio, setShowSobreUsoApp }) {
+export default function Menu({ setShowMinhaConta,setShowMap, setShowSobreUsoApp }) {
   const dispatch = useDispatch();
 
   // Pega o usuário do Redux
@@ -22,37 +22,35 @@ export default function Menu({ setShowMinhaConta, setShowFerramentasUber, setSho
           className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3"
           onClick={() => setShowSobreUsoApp(true)}
         >
-          <span>Sobre Nós</span>
+          <span>Sobre aplicativo</span>
         </li>
-
-      
-
-        {/* Mostra só se status for "Comercio" */}
-        {status === "uber" && (
-          <li
-            className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3"
-            onClick={() => setShowFerramentasComercio(true)}
-          >
-            <span>Ferramentas Comercio</span>
-          </li>
-        )}
-
-        {/* Mostra só se status for "Uber" */}
-        {status === "uber" && (
-          <li
-            className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3"
-            onClick={() => setShowFerramentasUber(true)}
-          >
-            <span>Ferramentas Uber</span>
-          </li>
-        )}
-
+           <li
+          className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3"
+          onClick={() => setShowMap(true)}
+        >
+          <span>Map</span>
+        </li>
+       
         <li
           className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3"
           onClick={() => dispatch(logout())}
         >
           <span>Logout</span>
         </li>
+
+        {/**aqui sera visivel somente status uber aqui user nao tem acesso */}
+          {/* Mostra só se status for "uber" */}
+        {status === "uber" && (
+          <li
+            className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3"
+            onClick={() => setShowMap(true)}
+          >
+            <span>Notificações Corridas</span>
+          </li>
+        )}
+
+
+
       </ul>
     </div>
   );

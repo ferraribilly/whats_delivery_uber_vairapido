@@ -2,10 +2,9 @@ import { useSelector } from "react-redux";
 import { ChatIcon, CommunityIcon, DotsIcon, StoryIcon } from "../../../svg";
 import { useState } from "react";
 import Menu from "./Menu";
-import { MinhaConta } from "./createGroup";
-import FerramentasUber from "./createGroup/FerramentasUber";
-import FerramentasComercio from "./createGroup/FerramentasComercio";
-import SobreUsoApp from "./createGroup/SobreUsoApp";
+import { MinhaConta, Map, SobreUsoApp} from "./createGroup";
+
+
 
 
 export default function SidebarHeader() {
@@ -13,8 +12,10 @@ export default function SidebarHeader() {
   const [showMenu, setShowMenu] = useState(false);
   const [showMinhaConta, setShowMinhaConta] = useState(false);
   const [showSobreUsoApp, setShowSobreUsoApp] = useState(false);
-  const [showFerramentasComercio, setShowFerramentasComercio] = useState(false);
-  const [showFerramentasUber, setShowFerramentasUber] = useState(false);
+  const [showMap, setShowMap] = useState(false);
+ 
+  const status = user?.status;
+
   
   // Controle para caixa do CommunityIcon
   const [showVehicleSelector, setShowVehicleSelector] = useState(false);
@@ -56,56 +57,25 @@ export default function SidebarHeader() {
                 <CommunityIcon className="dark:fill-dark_svg_1" />
               </button>
 
-              {showVehicleSelector && (
-                <div className="absolute top-10 right-0 bg-dark_bg_2 text-white shadow-lg rounded-lg p-2 z-50 w-40">
-                  <button
-                    className="block w-full text-left px-4 py-2 rounded-md hover:bg-dark_hover_1 transition-colors"
-                    onClick={() => handleVehicleSelect("Moto")}
-                  >
-                    Moto
-                  </button>
-                  <button
-                    className="block w-full text-left px-4 py-2 rounded-md hover:bg-dark_hover_1 transition-colors"
-                    onClick={() => handleVehicleSelect("Carro")}
-                  >
-                    Carro
-                  </button>
-                </div>
-              )}
+             
             </li>
 
-            {/* Botão StoryIcon */}
-            <li className="relative">
-              <button
-                className="btn"
-                onClick={() => setShowVehicleSelectorStory((prev) => !prev)}
-              >
-                <StoryIcon className="dark:fill-dark_svg_1" />
-              </button>
-
-              {showVehicleSelectorStory && (
-                <div className="absolute top-10 right-0 bg-dark_bg_2 text-white shadow-lg rounded-lg p-2 z-50 w-40">
-                  <button
-                    className="block w-full text-left px-4 py-2 rounded-md hover:bg-dark_hover_1 transition-colors"
-                    onClick={() => handleVehicleSelect("Lanchonete")}
-                  >
-                    Lanchonete
-                  </button>
-                  <button
-                    className="block w-full text-left px-4 py-2 rounded-md hover:bg-dark_hover_1 transition-colors"
-                    onClick={() => handleVehicleSelect("Pizzaria")}
-                  >
-                    Pizzaria
-                  </button>
-                  <button
-                    className="block w-full text-left px-4 py-2 rounded-md hover:bg-dark_hover_1 transition-colors"
-                    onClick={() => handleVehicleSelect("Restaurante")}
-                  >
-                    Restaurante
-                  </button>
-                </div>
-              )}
-            </li>
+          
+             
+          
+  {/* Mostra só se status for "uber" */}
+        {status === "uber" && (
+          <li className="relative">
+              <a
+              href="https://waze.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn"
+             >
+            <StoryIcon className="dark:fill-dark_svg_1" />
+            </a>
+           </li>
+        )}
 
             {/* Botão ChatIcon
             <li>
@@ -125,8 +95,8 @@ export default function SidebarHeader() {
               {showMenu && (
                 <Menu
                   setShowMinhaConta={setShowMinhaConta}
-                  setShowFerramentasComercio={setShowFerramentasComercio}
-                  setShowFerramentasUber={setShowFerramentasUber}
+                  setShowMap={setShowMap}
+                
                   setShowSobreUsoApp={setShowSobreUsoApp}
                   setShowMenu={setShowMenu}
                 />
@@ -144,12 +114,10 @@ export default function SidebarHeader() {
       {/* Sobre App */}
       {showSobreUsoApp && <SobreUsoApp setShowSobreUsoApp={setShowSobreUsoApp} />}
 
-      {/* Ferramentas Comercio */}
-      {showFerramentasComercio && <FerramentasComercio setShowFerramentasComercio={setShowFerramentasComercio} />}
+      {/* Map */}
+      {showMap && <Map setShowMap={setShowMap} />}
 
-        {/* Ferramentas Uber */}
-      {showFerramentasUber && <FerramentasUber setShowFerramentasUber={setShowFerramentasUber} />}
-
+      
     
     </>
   );

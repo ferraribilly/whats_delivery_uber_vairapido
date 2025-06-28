@@ -1,6 +1,7 @@
 import MinhaConta from "./MinhaConta";
-import FerramentasUber from "./FerramentasUber";
-import FerramentasComercio from "./FerramentasComercio";
+
+import Map from "./Map";
 import SobreUsoApp from "./SobreUsoApp"
 
-export { MinhaConta, FerramentasComercio, FerramentasUber, SobreUsoApp };
+
+export { MinhaConta, Map, SobreUsoApp };

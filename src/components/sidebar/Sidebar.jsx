@@ -17,12 +17,15 @@ export default function Sidebar({ onlineUsers, typing, onCloseSidebar }) {
       <SidebarHeader />
       
       <Notifications />
+
+      
+
       <Search
         searchLength={searchResults.length}
         setSearchResults={setSearchResults}
         onSelectConversation={onCloseSidebar}
       />
-      {searchResults.length > 0 ? (
+      {searchResults.length > -1 ? (
         <SearchResults
           searchResults={searchResults}
           setSearchResults={setSearchResults}

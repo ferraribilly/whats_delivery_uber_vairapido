@@ -205,7 +205,7 @@ export default function RegisterUber() {
           <p className="flex flex-col items-center justify-center mt-10 text-center text-md dark:text-dark_text_1">
             <span>have an account ?</span>
             <Link
-              to="/loginuber"
+              to="/login"
               className="hover:underline cursor-pointer transition ease-in duration-300"
             >
               Sign in

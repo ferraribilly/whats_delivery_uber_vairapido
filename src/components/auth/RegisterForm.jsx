@@ -63,8 +63,14 @@ export default function RegisterForm() {
       {/* Container */}
       <div className="w-full max-w-md space-y-8 p-10  rounded-xl">
         {/*Heading*/}
+         {/* ✅ LOGO DA EMPRESA COM ANIMAÇÃO */}
+          <img
+            src="/assets/img/logovaiRapidoUber.png"
+            alt="Logo Vai Rápido"
+            className="w-60 h-48 mx-auto mb-0 blinking-logo"
+          />
         <div className="text-center dark:text-dark_text_1">
-          <h2 className="mt-6 text-3xl font-bold">Welcome Clients</h2>
+          <h2 className="mt-6 text-3xl font-bold">Bem-vindo passageiro(a)</h2>
           <p className="mt-2 text-sm">Sign up</p>
         </div>
         {/*Form*/}
@@ -73,6 +79,13 @@ export default function RegisterForm() {
             name="name"
             type="text"
             placeholder="Full Name"
+            register={register}
+            error={errors?.name?.message}
+          />
+          <AuthInput
+            name="cpf"
+            type="text"
+            placeholder="Digite seu cpf"
             register={register}
             error={errors?.name?.message}
           />

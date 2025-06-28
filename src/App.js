@@ -11,13 +11,9 @@ import SocketContext from "./context/SocketContext";
 //Pages
 import Home from "./pages/home";
 import Login from "./pages/login";
-import LoginUber from "./pages/loginuber";
 import Register from "./pages/register";
 import EscolherPerfil from "./pages/escolherperfil"
-import RegisterEmpresas from "./pages/registerempresas";
 import RegisterUber from "./pages/registeruber";
-import RegisterComercios from "./pages/registercomercios";
-import RegisterChatPrivado from "./pages/registerchatprivado";
 import Store from "./components/Store/Store";
 //socket io
 const socket = io(process.env.REACT_APP_API_ENDPOINT.split("/api/v1")[0]);
@@ -39,9 +35,6 @@ function App() {
                 token ? <Home socket={socket} /> : <Navigate to="/login" />
               }
             />
-
-            
-            
             <Route
               exact
               path="/escolherperfil"
@@ -52,29 +45,17 @@ function App() {
               path="/register"
               element={!token ? <Register /> : <Navigate to="/" />}
             />
-            <Route
-              exact
-              path="/registerchatprivado"
-              element={!token ? <RegisterChatPrivado /> : <Navigate to="/" />}
-            />
+           
             <Route
               exact
               path="/registeruber"
               element={!token ? <RegisterUber /> : <Navigate to="/" />}
             />
+            
+           
             <Route
               exact
-              path="/registercomercios"
-              element={!token ? <RegisterComercios /> : <Navigate to="/" />}
-            />
-            <Route
-              exact
-              path="/registerempresas"
-              element={!token ? <RegisterEmpresas /> : <Navigate to="/" />}
-            />
-            <Route
-              exact
-              path="/assinatura"
+              path="/pagamento_taxas"
               element={!token ? <Store /> : <Navigate to="/" />}
             />
             <Route
@@ -82,11 +63,13 @@ function App() {
               path="/login"
               element={!token ? <Login /> : <Navigate to="/" />}
             />
+
              <Route
               exact
-              path="/loginuber"
-              element={!token ? <LoginUber /> : <Navigate to="/" />}
+              path="/login"
+              element={!token ? <Login /> : <Navigate to="/" />}
             />
+             
           </Routes>
         </Router>
       </SocketContext.Provider>

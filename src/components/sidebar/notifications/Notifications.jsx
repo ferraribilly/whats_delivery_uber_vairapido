@@ -1,30 +1,33 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowIcon, CloseIcon, NotificationIcon } from "../../../svg";
 
 export default function Notifications() {
-  const [visible, setVisible] = useState(true);
-  const [accepted, setAccepted] = useState(null); // null = sem resposta, true = aceitou, false = recusou
+  const [visible, setVisible] = useState(false); // começa como false
 
-  if (!visible) return null;
+  useEffect(() => {
+    // Verifica se já foi definido no localStorage
+    const permission = localStorage.getItem("notifications_allowed");
+    if (permission === null) {
+      setVisible(true); // Mostra se ainda não respondeu
+    }
+  }, []);
 
   const handleAccept = async () => {
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
-      setAccepted(true);
-      // Pode salvar em localStorage ou context para uso global
       localStorage.setItem("notifications_allowed", "true");
     } else {
-      setAccepted(false);
       localStorage.setItem("notifications_allowed", "false");
     }
     setVisible(false);
   };
 
   const handleReject = () => {
-    setAccepted(false);
     localStorage.setItem("notifications_allowed", "false");
     setVisible(false);
   };
+
+  if (!visible) return null;
 
   return (
     <div className="h-[auto] dark:bg-dark_bg_3 flex items-center p-[13px]">

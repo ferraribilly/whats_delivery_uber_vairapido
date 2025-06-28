@@ -67,12 +67,11 @@ export default function RegisterForm() {
         <div className="text-center dark:text-dark_text_1">
           {/* ✅ LOGO DA EMPRESA COM ANIMAÇÃO */}
           <img
-            src="/assets/img/vairapido.png"
+            src="/assets/img/logovaiRapidoUber.png"
             alt="Logo Vai Rápido"
-            className="w-48 h-32 mx-auto mb-0 blinking-logo"
+            className="w-60 h-48 mx-auto mb-0 blinking-logo"
           />
-          <h1 className="mt-1 text-1xl font-bold">Empresa Inovadora Franca-SP</h1>
-          <p className="mt-2 text-sm">Sign in</p>
+          <h1 className="mt-1 text-1xl font-bold">Login</h1>
         </div>
 
         {/* Form */}
@@ -128,7 +127,7 @@ export default function RegisterForm() {
               alt="Certificado SSL"
               className="w-48 h-auto mt-4"
             />
-             <h1 className="mt-1 text-1xl font-bold">Desenvolvido</h1>
+             <h1 className="mt-1 text-1xl font-bold">Desenvolvido por - William Ferrari</h1>
             {/* ✅ 3 ÍCONES: ANDROID / IOS / WEB */}
             <div className="flex items-center justify-center gap-4 mt-4 flex-wrap">
               <img
