@@ -103,7 +103,7 @@ export default function Map({ setShowMap, setShowLocal }) {
       const coordOrigem = await geocodeEndereco(origem);
       const coordDestino = await geocodeEndereco(destino);
 
-      const { data } = await axios.get("http://localhost:5000/api/v1/route/request", {
+      const { data } = await axios.get("https://ferraribback-end-clone-whatsapp.onrender.com/api/v1/route/request", {
         params: {
           api_key: process.env.REACT_APP_API_PUBLIC,
           origem: coordOrigem,
