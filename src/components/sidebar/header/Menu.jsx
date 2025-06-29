@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../../features/userSlice";
-
+import { ChatIcon, CommunityIcon, DotsIcon, StoryIcon } from "../../../svg";
 export default function Menu({ setShowMinhaConta,setShowMap, setShowSobreUsoApp }) {
   const dispatch = useDispatch();
 
@@ -24,12 +24,14 @@ export default function Menu({ setShowMinhaConta,setShowMap, setShowSobreUsoApp 
         >
           <span>Sobre aplicativo</span>
         </li>
-           <li
-          className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3"
-          onClick={() => setShowMap(true)}
-        >
-          <span>Map</span>
-        </li>
+          <li
+  className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3 flex items-center gap-2"
+  onClick={() => setShowMap(true)}
+>
+  <StoryIcon className="dark:fill-dark_svg_1 w-6 h-6" />
+  <span>Waze Navegação</span>
+</li>
+
        
         <li
           className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3"

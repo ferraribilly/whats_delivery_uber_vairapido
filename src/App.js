@@ -12,9 +12,11 @@ import SocketContext from "./context/SocketContext";
 import Home from "./pages/home";
 import Login from "./pages/login";
 import Register from "./pages/register";
-import EscolherPerfil from "./pages/escolherperfil"
+import EscolherPerfil from "./pages/escolherperfil";
 import RegisterUber from "./pages/registeruber";
 import Store from "./components/Store/Store";
+import ConfirmarPagamento from "./pages/confirmarpagamento"; 
+
 //socket io
 const socket = io(process.env.REACT_APP_API_ENDPOINT.split("/api/v1")[0]);
 
@@ -31,9 +33,7 @@ function App() {
             <Route
               exact
               path="/"
-              element={
-                token ? <Home socket={socket} /> : <Navigate to="/login" />
-              }
+              element={token ? <Home socket={socket} /> : <Navigate to="/login" />}
             />
             <Route
               exact
@@ -45,14 +45,11 @@ function App() {
               path="/register"
               element={!token ? <Register /> : <Navigate to="/" />}
             />
-           
             <Route
               exact
               path="/registeruber"
               element={!token ? <RegisterUber /> : <Navigate to="/" />}
             />
-            
-           
             <Route
               exact
               path="/pagamento_taxas"
@@ -64,12 +61,11 @@ function App() {
               element={!token ? <Login /> : <Navigate to="/" />}
             />
 
-             <Route
+            <Route
               exact
-              path="/login"
-              element={!token ? <Login /> : <Navigate to="/" />}
+              path="/confirmar-pagamento"
+              element={token ? <ConfirmarPagamento /> : <Navigate to="/login" />}
             />
-             
           </Routes>
         </Router>
       </SocketContext.Provider>

@@ -90,7 +90,7 @@ export default function SidebarHeader() {
               onClick={() => setShowMenu((prev) => !prev)}
             >
               <button className={`btn ${showMenu ? "bg-dark_hover_1" : ""}`}>
-                <DotsIcon className="dark:fill-dark_svg_1" />
+              <StoryIcon className="dark:fill-dark_svg_1" />
               </button>
               {showMenu && (
                 <Menu

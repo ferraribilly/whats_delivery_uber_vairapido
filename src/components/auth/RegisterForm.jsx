@@ -11,9 +11,6 @@ import Picture from "./Picture";
 import axios from "axios";
 const cloud_name = process.env.REACT_APP_CLOUD_NAME;
 const cloud_secret = process.env.REACT_APP_CLOUD_SECRET;
-
-
-
 export default function RegisterForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -47,8 +44,7 @@ export default function RegisterForm() {
       }
     }
   };
-
-  const uploadImage = async () => {
+ const uploadImage = async () => {
   let formData = new FormData();
   formData.append("file", picture); 
   formData.append("upload_preset", "vaiturbo"); 
@@ -83,13 +79,6 @@ export default function RegisterForm() {
             error={errors?.name?.message}
           />
           <AuthInput
-            name="cpf"
-            type="text"
-            placeholder="Digite seu cpf"
-            register={register}
-            error={errors?.name?.message}
-          />
-          <AuthInput
             name="email"
             type="text"
             placeholder="Email address"
@@ -111,6 +100,12 @@ export default function RegisterForm() {
             error={errors?.password?.message}
           />
         
+           {/* Picture */}
+          <Picture
+            readablePicture={readablePicture}
+            setReadablePicture={setReadablePicture}
+            setPicture={setPicture}
+          />
           {/*if we have an error*/}
           {error ? (
             <div>
