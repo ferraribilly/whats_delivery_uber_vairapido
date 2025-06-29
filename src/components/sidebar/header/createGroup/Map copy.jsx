@@ -278,25 +278,28 @@ export default function Map({ setShowMap, setShowLocal }) {
           />
         </div>
 
-        {ultimoDestino && ultimoDestino.trim() !== "" && (
-          <div className="mb-3">
-            <label className="block mb-1 text-gray-700 font-semibold">
-              Último destino disponível:
-            </label>
+       {ultimoDestino && ultimoDestino.trim() !== "" && (
+  <div className="mb-3">
+    <label className="block mb-1 text-gray-700 font-semibold">
+      Último destino disponível:
+    </label>
 
-            <button
-              onClick={preencherUltimoDestino}
-              className="flex flex-col items-start justify-center gap-1 bg-yellow-300 text-gray-900 py-2 px-4 rounded-xl w-full hover:bg-yellow-400 transition text-left"
-              type="button"
-            >
-              <div className="flex items-center gap-2">
-                <History className="w-5 h-5" />
-                <span className="font-semibold">Repetir último destino</span>
-              </div>
-              <span className="text-sm text-gray-800 truncate">{ultimoDestino}</span>
-            </button>
-          </div>
-        )}
+   
+
+    <button
+      onClick={preencherUltimoDestino}
+      className="flex flex-col items-start justify-center gap-1 bg-yellow-300 text-gray-900 py-2 px-4 rounded-xl w-full hover:bg-yellow-400 transition text-left"
+      type="button"
+    >
+      <div className="flex items-center gap-2">
+        <History className="w-5 h-5" />
+        <span className="font-semibold">Repetir último destino</span>
+      </div>
+      <span className="text-sm text-gray-800 truncate">{ultimoDestino}</span>
+    </button>
+  </div>
+)}
+
 
         {showOrigem && (
           <>
