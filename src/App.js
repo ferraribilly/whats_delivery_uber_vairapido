@@ -20,6 +20,9 @@ import ConfirmarPagamento from "./pages/confirmarpagamento";
 //socket io
 const socket = io(process.env.REACT_APP_API_ENDPOINT.split("/api/v1")[0]);
 
+
+
+
 function App() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user);

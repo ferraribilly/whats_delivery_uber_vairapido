@@ -2,10 +2,7 @@ import { useSelector } from "react-redux";
 import { ChatIcon, CommunityIcon, DotsIcon, StoryIcon } from "../../../svg";
 import { useState } from "react";
 import Menu from "./Menu";
-import { MinhaConta, Map, SobreUsoApp} from "./createGroup";
-
-
-
+import { MinhaConta, Map, SobreUsoApp } from "./createGroup";
 
 export default function SidebarHeader() {
   const { user } = useSelector((state) => state.user);
@@ -13,10 +10,9 @@ export default function SidebarHeader() {
   const [showMinhaConta, setShowMinhaConta] = useState(false);
   const [showSobreUsoApp, setShowSobreUsoApp] = useState(false);
   const [showMap, setShowMap] = useState(false);
- 
+
   const status = user?.status;
 
-  
   // Controle para caixa do CommunityIcon
   const [showVehicleSelector, setShowVehicleSelector] = useState(false);
 
@@ -27,8 +23,6 @@ export default function SidebarHeader() {
     console.log("Selecionado:", vehicle);
     setShowVehicleSelector(false);
     setShowVehicleSelectorStory(false);
-
-    // Aqui você pode adicionar sua lógica: ex: dispatch, navegação, etc.
   };
 
   return (
@@ -48,41 +42,31 @@ export default function SidebarHeader() {
 
           {/* user icons */}
           <ul className="flex items-center gap-x-2.5 relative">
-            {/* Botão CommunityIcon com caixa de opções */}
+            {/* Botão CommunityIcon redireciona para URL */}
             <li className="relative">
-              <button
+              <a
+                href="https://busy-sawfly-new.ngrok-free.app/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="btn"
-                onClick={() => setShowVehicleSelector((prev) => !prev)}
               >
                 <CommunityIcon className="dark:fill-dark_svg_1" />
-              </button>
-
-             
+              </a>
             </li>
 
-          
-             
-          
-  {/* Mostra só se status for "uber" */}
-        {status === "uber" && (
-          <li className="relative">
-              <a
-              href="https://waze.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn"
-             >
-            <StoryIcon className="dark:fill-dark_svg_1" />
-            </a>
-           </li>
-        )}
-
-            {/* Botão ChatIcon
-            <li>
-              <button className="btn">
-                <ChatIcon className="dark:fill-dark_svg_1" />
-              </button>
-            </li> */}
+            {/* Mostra só se status for "uber" */}
+            {status === "uber" && (
+              <li className="relative">
+                <a
+                  href="https://waze.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn"
+                >
+                  <StoryIcon className="dark:fill-dark_svg_1" />
+                </a>
+              </li>
+            )}
 
             {/* Menu com 3 pontinhos */}
             <li
@@ -90,13 +74,12 @@ export default function SidebarHeader() {
               onClick={() => setShowMenu((prev) => !prev)}
             >
               <button className={`btn ${showMenu ? "bg-dark_hover_1" : ""}`}>
-              <StoryIcon className="dark:fill-dark_svg_1" />
+                <StoryIcon className="dark:fill-dark_svg_1" />
               </button>
               {showMenu && (
                 <Menu
                   setShowMinhaConta={setShowMinhaConta}
                   setShowMap={setShowMap}
-                
                   setShowSobreUsoApp={setShowSobreUsoApp}
                   setShowMenu={setShowMenu}
                 />
@@ -112,13 +95,12 @@ export default function SidebarHeader() {
       )}
 
       {/* Sobre App */}
-      {showSobreUsoApp && <SobreUsoApp setShowSobreUsoApp={setShowSobreUsoApp} />}
+      {showSobreUsoApp && (
+        <SobreUsoApp setShowSobreUsoApp={setShowSobreUsoApp} />
+      )}
 
       {/* Map */}
       {showMap && <Map setShowMap={setShowMap} />}
-
-      
-    
     </>
   );
 }
