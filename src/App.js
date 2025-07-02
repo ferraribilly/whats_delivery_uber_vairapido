@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   BrowserRouter as Router,
@@ -15,13 +15,18 @@ import Register from "./pages/register";
 import EscolherPerfil from "./pages/escolherperfil";
 import RegisterUber from "./pages/registeruber";
 import Store from "./components/Store/Store";
-import ConfirmarPagamento from "./pages/confirmarpagamento"; 
+import ConfirmarPagamento from "./pages/confirmarpagamento";
 
 //socket io
 const socket = io(process.env.REACT_APP_API_ENDPOINT.split("/api/v1")[0]);
 
+function RedirectToStatic({ path }) {
+  useEffect(() => {
+    window.location.href = path;
+  }, [path]);
 
-
+  return null;
+}
 
 function App() {
   const dispatch = useDispatch();
@@ -63,11 +68,17 @@ function App() {
               path="/login"
               element={!token ? <Login /> : <Navigate to="/" />}
             />
-
             <Route
               exact
               path="/confirmar-pagamento"
               element={token ? <ConfirmarPagamento /> : <Navigate to="/login" />}
+            />
+
+            {/* Rota para abrir o HTML estático em public/calculo_rota/index.html */}
+            <Route
+              exact
+              path="/calculo_rota"
+              element={<RedirectToStatic path="/calculo_rota/index.html" />}
             />
           </Routes>
         </Router>

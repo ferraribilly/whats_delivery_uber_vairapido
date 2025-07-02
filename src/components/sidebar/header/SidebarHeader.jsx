@@ -45,7 +45,7 @@ export default function SidebarHeader() {
             {/* Botão CommunityIcon redireciona para URL */}
             <li className="relative">
               <a
-                href="https://busy-sawfly-new.ngrok-free.app/"
+                href="/calculo_rota/index.html"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn"

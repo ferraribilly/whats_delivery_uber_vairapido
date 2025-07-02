@@ -110,7 +110,7 @@ export default function Map({ setShowMap, setShowLocal }) {
       const coordDestino = await geocodeEndereco(destino);
 
       const { data } = await axios.get(
-        "http://localhost:5000/api/v1/route/request",
+        "http://router.project-osrm.org/route/v1/driving/",
         {
           params: {
             api_key: process.env.REACT_APP_API_PUBLIC,

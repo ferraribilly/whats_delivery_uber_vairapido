@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mapa OSRM - Estilo Moderno</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    html, body { margin: 0; padding: 0; font-family: sans-serif; height: 100%; overflow: hidden; }
+    #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+    #sheet {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 50%;
+      background: rgba(255, 255, 255, 0.33);
+      border-top-left-radius: 30px;
+      border-top-right-radius: 30px;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1), 0 0 15px rgba(0,0,0,0.05);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      padding: 16px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      transition: height 0.3s ease;
+    }
+    .drag-handle {
+      width: 40px;
+      height: 5px;
+      background: #ccc;
+      border-radius: 3px;
+      align-self: center;
+      margin-bottom: 10px;
+      cursor: grab;
+    }
+    h2 { text-align: center; margin-bottom: 16px; }
+    .input-wrap { position: relative; margin-bottom: 12px; }
+    input {
+      width: 90%;
+      padding: 10px 10px 10px 40px;
+      border-radius: 999px;
+      border: 1px solid #ccc;
+      outline: none;
+      font-size: 1rem;
+    }
+    .input-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      animation: bounce 1.5s infinite;
+    }
+    button {
+      border: none;
+      background: #3b82f6;
+      color: white;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      margin-top: 10px;
+    }
+    button:hover { background: #22c55e; }
+    .result {
+      margin-top: 20px;
+      font-weight: bold;
+      color: #333;
+      text-align: center;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(-50%) translateY(0); }
+      50% { transform: translateY(-50%) translateY(-5px); }
+    }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div id="sheet">
+  <div class="drag-handle"></div>
+  <h2>Pra onde vamos hoje!</h2>
+
+  <div class="input-wrap">
+    <input type="text" id="origem" placeholder="Meu Local" />
+    <svg class="input-icon" width="20" height="20" fill="green" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 6.75 7 13 7 13s7-6.25 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>
+  </div>
+
+  <div class="input-wrap">
+    <input type="text" id="destino" placeholder="Para Onde Vai" />
+    <svg class="input-icon" width="20" height="20" fill="blue" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 4.25 3.5 8.95 6.12 11.88.55.61 1.22.61 1.77 0C15.5 17.95 19 13.25 19 9c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>
+  </div>
+
+  <button onclick="calcularRota()">Calcular Valor</button>
+
+  <div class="result" id="resultado"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  let mapa = L.map("map", {
+    center: [-20.536479, -47.405637],
+    zoom: 19,
+    zoomControl: false,
+    attributionControl: false,
+  });
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "© OpenStreetMap",
+  }).addTo(mapa);
+
+  let rotaLayer = null;
+  let origemCoord = null;
+  let destinoCoord = null;
+
+  // Pega localização e preenche input origem
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      origemCoord = `${lon},${lat}`;
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+        const data = await res.json();
+        document.getElementById("origem").value = data.display_name || `${lat},${lon}`;
+      } catch {
+        document.getElementById("origem").value = `${lat},${lon}`;
+      }
+    });
+  }
+
+  // Função para calcular rota ao clicar no botão
+  async function calcularRota() {
+    const origemInput = document.getElementById("origem").value.trim();
+    const destinoInput = document.getElementById("destino").value.trim();
+
+    if (!origemInput || !destinoInput) {
+      alert("Preencha os campos Origem e Destino!");
+      return;
+    }
+
+    // Para converter endereços em coordenadas, use a API Nominatim (OpenStreetMap)
+    try {
+      // Geocodifica origem
+      let resOrigem = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(origemInput)}`);
+      let dataOrigem = await resOrigem.json();
+      if (!dataOrigem.length) throw new Error("Origem não encontrada");
+      origemCoord = `${dataOrigem[0].lon},${dataOrigem[0].lat}`;
+
+      // Geocodifica destino
+      let resDestino = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destinoInput)}`);
+      let dataDestino = await resDestino.json();
+      if (!dataDestino.length) throw new Error("Destino não encontrado");
+      destinoCoord = `${dataDestino[0].lon},${dataDestino[0].lat}`;
+
+      // Chama API OSRM local
+      const resRota = await fetch(`http://localhost:5001/route/v1/driving/${origemCoord};${destinoCoord}?overview=full&geometries=geojson`);
+      
+      
+
+      const dataRota = await resRota.json();
+
+      if (!dataRota.routes || !dataRota.routes.length) throw new Error("Sem rota");
+
+      const coords = dataRota.routes[0].geometry.coordinates.map(([lon, lat]) => [lat, lon]);
+
+      if (rotaLayer) mapa.removeLayer(rotaLayer);
+      rotaLayer = L.polyline(coords, { color: "blue", weight: 5 }).addTo(mapa);
+      mapa.fitBounds(rotaLayer.getBounds());
+
+      const distanciaKm = dataRota.routes[0].distance / 1000;
+      const duracaoMin = dataRota.routes[0].duration / 60;
+      document.getElementById("resultado").textContent = `Distância: ${distanciaKm.toFixed(2)} km | Duração: ${duracaoMin.toFixed(1)} min`;
+
+    } catch (err) {
+      alert(err.message || "Erro ao calcular rota");
+      document.getElementById("resultado").textContent = "";
+      if (rotaLayer) {
+        mapa.removeLayer(rotaLayer);
+        rotaLayer = null;
+      }
+    }
+  }
+</script>
+
+</body>
+</html>

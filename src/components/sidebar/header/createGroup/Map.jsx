@@ -110,14 +110,13 @@ export default function Map({ setShowMap, setShowLocal }) {
       const coordDestino = await geocodeEndereco(destino);
 
       const { data } = await axios.get(
-        "https://busy-sawfly-new.ngrok-free.app/route/request",
+        "http://localhost:5001/route/v1/driving/",
         {
           params: {
-            api_key: process.env.REACT_APP_API_PUBLIC,
             origem: coordOrigem,
             destino: coordDestino,
           },
-          headers: { Authorization: `Bearer ${token}` },
+      
         }
       );
 
