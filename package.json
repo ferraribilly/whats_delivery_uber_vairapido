@@ -48,7 +48,7 @@
     "yup": "^1.0.2"
   },
   "scripts": {
-    "proxy": "https://busy-sawfly-new.ngrok-free.app/route/v1/driving/",
+    "proxy": "https://busy-sawfly-new.ngrok-free.app",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",

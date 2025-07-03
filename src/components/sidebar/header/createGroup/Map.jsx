@@ -14,17 +14,16 @@ export default function Map({ setShowMap, setShowLocal }) {
   const [points, setPoints] = useState([]);
   const [distancia, setDistancia] = useState(null);
   const [duracao, setDuracao] = useState(null);
-  const [sheetHeight, setSheetHeight] = useState(() => window.innerHeight / 2);
-  const sheetRef = useRef(null);
-  const startYRef = useRef(0);
-  const startHeightRef = useRef(0);
-  const draggingRef = useRef(false);
-  const [ativo, setAtivo] = useState(false);
+  const [statusApiHtml, setStatusApiHtml] = useState("");
 
-  const { user } = useSelector((state) => state.user);
-  const token = user?.token;
+  const apiURL = process.env.REACT_APP_API_URL || "http://localhost:3005";
 
-  const osrmURL = "http://172.26.90.27:5001/route/v1/driving";
+  useEffect(() => {
+    axios
+      .get(`${apiURL}`)
+      .then((res) => setStatusApiHtml(res.data))
+      .catch(() => setStatusApiHtml("<h1 style='color:red;text-align:center;'>API OFFLINE ❌</h1>"));
+  }, [apiURL]);
 
   useEffect(() => {
     const mapa = L.map("map", {
@@ -43,58 +42,43 @@ export default function Map({ setShowMap, setShowLocal }) {
     mapa.on("click", (e) => {
       const { lat, lng } = e.latlng;
 
-      // Verifica se clicou em cima de um marcador já existente
-      const clicouEmOrigem = markerOrigemRef.current?.getLatLng().equals([lat, lng]);
-      const clicouEmDestino = markerDestinoRef.current?.getLatLng().equals([lat, lng]);
+      setPoints((prev) => {
+        const novos = [...prev, [lat, lng]];
 
-      if (clicouEmOrigem || clicouEmDestino) {
-        limparTudo();
-        return;
-      }
-
-      if (points.length === 0) {
-        adicionarOrigem([lat, lng]);
-        setPoints([[lat, lng]]);
-      } else if (points.length === 1) {
-        adicionarDestino([lat, lng]);
-        setPoints((prev) => {
-          const novos = [...prev, [lat, lng]];
+        if (novos.length === 2) {
+          addMarkers(novos[0], novos[1]);
           calcularRota(novos);
           return novos;
-        });
-      } else {
-        limparTudo();
-        adicionarOrigem([lat, lng]);
-        setPoints([[lat, lng]]);
-      }
+        } else if (novos.length > 2) {
+          if (rotaLayerRef.current) rotaLayerRef.current.remove();
+          if (markerOrigemRef.current) markerOrigemRef.current.remove();
+          if (markerDestinoRef.current) markerDestinoRef.current.remove();
+          setDistancia(null);
+          setDuracao(null);
+          return [[lat, lng]];
+        } else {
+          if (markerOrigemRef.current) markerOrigemRef.current.remove();
+          markerOrigemRef.current = L.marker([lat, lng]).addTo(mapaRef.current);
+          return novos;
+        }
+      });
     });
 
     return () => mapa.remove();
-  }, [points]);
+  }, []);
 
-  const adicionarOrigem = (latlng) => {
-    if (markerOrigemRef.current) markerOrigemRef.current.remove();
-    markerOrigemRef.current = L.marker(latlng).addTo(mapaRef.current);
-  };
-
-  const adicionarDestino = (latlng) => {
-    if (markerDestinoRef.current) markerDestinoRef.current.remove();
-    markerDestinoRef.current = L.marker(latlng).addTo(mapaRef.current);
-  };
-
-  const limparTudo = () => {
-    if (rotaLayerRef.current) rotaLayerRef.current.remove();
+  const addMarkers = (origem, destino) => {
     if (markerOrigemRef.current) markerOrigemRef.current.remove();
     if (markerDestinoRef.current) markerDestinoRef.current.remove();
-    setPoints([]);
-    setDistancia(null);
-    setDuracao(null);
+
+    markerOrigemRef.current = L.marker(origem).addTo(mapaRef.current);
+    markerDestinoRef.current = L.marker(destino).addTo(mapaRef.current);
   };
 
   const calcularRota = async ([origem, destino]) => {
     try {
       const coords = `${origem[1]},${origem[0]};${destino[1]},${destino[0]}`;
-      const res = await axios.get(`${osrmURL}/${coords}`, {
+      const res = await axios.get(`${apiURL}/route/v1/driving/${coords}`, {
         params: {
           overview: "full",
           geometries: "geojson",
@@ -116,33 +100,9 @@ export default function Map({ setShowMap, setShowLocal }) {
 
       setDistancia(rota.distance / 1000);
       setDuracao(rota.duration / 60);
-      setSheetHeight(window.innerHeight / 2);
     } catch (err) {
       alert("Erro ao calcular rota.");
     }
-  };
-
-  const onDragStart = (e) => {
-    draggingRef.current = true;
-    startYRef.current = e.touches ? e.touches[0].clientY : e.clientY;
-    startHeightRef.current = sheetHeight;
-    document.body.style.userSelect = "none";
-  };
-
-  const onDragMove = (e) => {
-    if (!draggingRef.current) return;
-    const currentY = e.touches ? e.touches[0].clientY : e.clientY;
-    const diff = startYRef.current - currentY;
-    let newHeight = startHeightRef.current + diff;
-    if (newHeight < 120) newHeight = 120;
-    if (newHeight > window.innerHeight * 0.8)
-      newHeight = window.innerHeight * 0.8;
-    setSheetHeight(newHeight);
-  };
-
-  const onDragEnd = () => {
-    draggingRef.current = false;
-    document.body.style.userSelect = "";
   };
 
   const formatarDuracao = (minutos) => {
@@ -153,84 +113,22 @@ export default function Map({ setShowMap, setShowLocal }) {
 
   return (
     <div className="relative h-screen w-full z-40 overflow-hidden">
-      {ativo && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-[9999] text-sm">
-          💡 Backend ativo: mensagem recebida!
+      <div id="map" className="absolute top-0 left-0 w-full h-full z-0"></div>
+      <div
+        className="absolute top-4 left-4 z-[999] bg-white/80 px-4 py-2 rounded shadow-md max-w-xs"
+        dangerouslySetInnerHTML={{ __html: statusApiHtml }}
+      />
+      {/* O resto do seu JSX */}
+      {distancia !== null && duracao !== null && (
+        <div className="absolute bottom-20 left-4 z-[999] bg-white p-3 rounded shadow-md max-w-xs">
+          <div>
+            <strong>Distância:</strong> {distancia.toFixed(2)} km
+          </div>
+          <div>
+            <strong>Duração:</strong> {formatarDuracao(duracao)}
+          </div>
         </div>
       )}
-
-      <div id="map" className="absolute top-0 left-0 w-full h-full z-0"></div>
-
-      <div className="relative z-10 p-2">
-        <button
-          onClick={() => setShowMap(false)}
-          className="absolute top-0 right-10 text-gray-600 hover:text-gray-900 transition p-2 rounded-full bg-gray-200 hover:bg-gray-300"
-          aria-label="Fechar mapa"
-        >
-          <ReturnIcon className="w-6 h-6" />
-        </button>
-      </div>
-
-      <div
-        ref={sheetRef}
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: sheetHeight,
-          backgroundColor: "rgba(255, 255, 255, 0.33)",
-          borderTopLeftRadius: "30px",
-          borderTopRightRadius: "30px",
-          boxShadow: "0 -2px 10px rgba(0,0,0,0.1), 0 0 15px rgba(0,0,0,0.05)",
-          padding: "16px",
-          zIndex: 60,
-          display: "flex",
-          flexDirection: "column",
-          overflowY: "auto",
-          transition: "height 0.3s ease",
-          backdropFilter: "blur(8px)",
-          WebkitBackdropFilter: "blur(8px)",
-        }}
-      >
-        <div
-          onMouseDown={onDragStart}
-          onTouchStart={onDragStart}
-          onMouseMove={onDragMove}
-          onTouchMove={onDragMove}
-          onMouseUp={onDragEnd}
-          onTouchEnd={onDragEnd}
-          onMouseLeave={onDragEnd}
-          style={{
-            width: "40px",
-            height: "5px",
-            backgroundColor: "#ccc",
-            borderRadius: "3px",
-            alignSelf: "center",
-            marginBottom: "10px",
-            cursor: "grab",
-          }}
-        ></div>
-
-        <h2 className="text-xl font-bold mb-4 text-center">Clique em 2 pontos no mapa</h2>
-
-        {distancia !== null && duracao !== null && (
-          <div className="mt-6 flex flex-col items-center justify-center gap-3 text-gray-800">
-            <div className="flex items-center gap-2 text-lg">
-              <MapPin className="w-5 h-5 text-blue-600" />
-              <span>
-                <strong>Distância:</strong> {distancia.toFixed(2)} km
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-lg">
-              <Clock className="w-5 h-5 text-green-600" />
-              <span>
-                <strong>Duração:</strong> {formatarDuracao(duracao)}
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
