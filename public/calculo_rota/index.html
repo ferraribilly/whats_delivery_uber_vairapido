@@ -100,6 +100,8 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+  const API_KEY = 'abc123def456'; // Coloque sua chave da API aqui (mesma do backend)
+
   let mapa = L.map("map", {
     center: [-20.536479, -47.405637],
     zoom: 19,
@@ -131,7 +133,6 @@
     });
   }
 
-  // Função para calcular rota ao clicar no botão
   async function calcularRota() {
     const origemInput = document.getElementById("origem").value.trim();
     const destinoInput = document.getElementById("destino").value.trim();
@@ -141,41 +142,44 @@
       return;
     }
 
-    // Para converter endereços em coordenadas, use a API Nominatim (OpenStreetMap)
     try {
-      // Geocodifica origem
-      let resOrigem = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(origemInput)}`);
-      let dataOrigem = await resOrigem.json();
-      if (!dataOrigem.length) throw new Error("Origem não encontrada");
-      origemCoord = `${dataOrigem[0].lon},${dataOrigem[0].lat}`;
+      // Chama a sua API backend que chama OSRM (porta 3005)
+      const res = await fetch('https://busy-sawfly-new.ngrok-free.app/route_request', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    api_key: API_KEY,
+    origem: origemInput,
+    destino: destinoInput
+  })
+});
 
-      // Geocodifica destino
-      let resDestino = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destinoInput)}`);
-      let dataDestino = await resDestino.json();
-      if (!dataDestino.length) throw new Error("Destino não encontrado");
-      destinoCoord = `${dataDestino[0].lon},${dataDestino[0].lat}`;
-
-      // Chama API OSRM local
-      const resRota = await fetch(`http://localhost:5001/route/v1/driving/${origemCoord};${destinoCoord}?overview=full&geometries=geojson`);
       
-      
+     
 
-      const dataRota = await resRota.json();
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Erro ao calcular rota');
+      }
 
-      if (!dataRota.routes || !dataRota.routes.length) throw new Error("Sem rota");
+      const data = await res.json();
 
-      const coords = dataRota.routes[0].geometry.coordinates.map(([lon, lat]) => [lat, lon]);
+      if (rotaLayer) {
+        mapa.removeLayer(rotaLayer);
+      }
 
-      if (rotaLayer) mapa.removeLayer(rotaLayer);
+      // A geometria vem no formato GeoJSON [lon, lat], Leaflet quer [lat, lon]
+      const coords = data.rota.coordinates.map(([lon, lat]) => [lat, lon]);
+
       rotaLayer = L.polyline(coords, { color: "blue", weight: 5 }).addTo(mapa);
       mapa.fitBounds(rotaLayer.getBounds());
 
-      const distanciaKm = dataRota.routes[0].distance / 1000;
-      const duracaoMin = dataRota.routes[0].duration / 60;
-      document.getElementById("resultado").textContent = `Distância: ${distanciaKm.toFixed(2)} km | Duração: ${duracaoMin.toFixed(1)} min`;
+      document.getElementById("resultado").textContent = `Distância: ${data.distancia.toFixed(2)} km | Duração: ${data.duracao.toFixed(1)} min`;
 
-    } catch (err) {
-      alert(err.message || "Erro ao calcular rota");
+    } catch (error) {
+      alert(error.message);
       document.getElementById("resultado").textContent = "";
       if (rotaLayer) {
         mapa.removeLayer(rotaLayer);

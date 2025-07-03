@@ -4,27 +4,27 @@ import axios from "axios";
 import "leaflet/dist/leaflet.css";
 import { ReturnIcon } from "../../../../svg";
 import { useSelector } from "react-redux";
-import { MapPin, Clock, Map as MapIcon, History } from "lucide-react";
+import { MapPin, Clock } from "lucide-react";
 
 export default function Map({ setShowMap, setShowLocal }) {
   const mapaRef = useRef(null);
   const rotaLayerRef = useRef(null);
-  const [origem, setOrigem] = useState("");
-  const [destino, setDestino] = useState("");
+  const markerOrigemRef = useRef(null);
+  const markerDestinoRef = useRef(null);
+  const [points, setPoints] = useState([]);
   const [distancia, setDistancia] = useState(null);
   const [duracao, setDuracao] = useState(null);
-  const [ultimoDestino, setUltimoDestino] = useState("");
-  const [destinoSalvo, setDestinoSalvo] = useState(false);
-
-  const { user } = useSelector((state) => state.user);
-  const token = user?.token;
-
   const [sheetHeight, setSheetHeight] = useState(() => window.innerHeight / 2);
-  const [showOrigem, setShowOrigem] = useState(false);
   const sheetRef = useRef(null);
   const startYRef = useRef(0);
   const startHeightRef = useRef(0);
   const draggingRef = useRef(false);
+  const [ativo, setAtivo] = useState(false);
+
+  const { user } = useSelector((state) => state.user);
+  const token = user?.token;
+
+  const osrmURL = "http://172.26.90.27:5001/route/v1/driving";
 
   useEffect(() => {
     const mapa = L.map("map", {
@@ -40,93 +40,73 @@ export default function Map({ setShowMap, setShowLocal }) {
 
     mapaRef.current = mapa;
 
+    mapa.on("click", (e) => {
+      const { lat, lng } = e.latlng;
+
+      // Verifica se clicou em cima de um marcador já existente
+      const clicouEmOrigem = markerOrigemRef.current?.getLatLng().equals([lat, lng]);
+      const clicouEmDestino = markerDestinoRef.current?.getLatLng().equals([lat, lng]);
+
+      if (clicouEmOrigem || clicouEmDestino) {
+        limparTudo();
+        return;
+      }
+
+      if (points.length === 0) {
+        adicionarOrigem([lat, lng]);
+        setPoints([[lat, lng]]);
+      } else if (points.length === 1) {
+        adicionarDestino([lat, lng]);
+        setPoints((prev) => {
+          const novos = [...prev, [lat, lng]];
+          calcularRota(novos);
+          return novos;
+        });
+      } else {
+        limparTudo();
+        adicionarOrigem([lat, lng]);
+        setPoints([[lat, lng]]);
+      }
+    });
+
     return () => mapa.remove();
-  }, []);
+  }, [points]);
 
-  useEffect(() => {
-    const getCurrentLocation = async () => {
-      if (!navigator.geolocation) return;
-
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          try {
-            const { data } = await axios.get(
-              "https://nominatim.openstreetmap.org/reverse",
-              {
-                params: { lat: latitude, lon: longitude, format: "json" },
-              }
-            );
-
-            if (data?.display_name) {
-              setOrigem(data.display_name);
-              setShowOrigem(true);
-            } else {
-              setOrigem(`${latitude},${longitude}`);
-              setShowOrigem(true);
-            }
-          } catch {
-            setOrigem(`${latitude},${longitude}`);
-            setShowOrigem(true);
-          }
-        },
-        (err) => console.error("Erro geolocalização", err),
-        { enableHighAccuracy: true }
-      );
-    };
-
-    getCurrentLocation();
-
-    const saved = localStorage.getItem("ultimo_destino");
-    if (saved) setUltimoDestino(saved);
-  }, []);
-
-  const geocodeEndereco = async (endereco) => {
-    try {
-      const { data } = await axios.get(
-        "https://nominatim.openstreetmap.org/search",
-        {
-          params: { q: endereco, format: "json", limit: 1 },
-        }
-      );
-
-      if (data.length === 0) throw new Error("Endereço não encontrado");
-      const { lat, lon } = data[0];
-      return `${lon},${lat}`;
-    } catch (err) {
-      alert("Erro ao localizar o endereço.");
-      throw err;
-    }
+  const adicionarOrigem = (latlng) => {
+    if (markerOrigemRef.current) markerOrigemRef.current.remove();
+    markerOrigemRef.current = L.marker(latlng).addTo(mapaRef.current);
   };
 
-  const calcularRota = async () => {
-    if (!origem || !destino) return alert("Preencha origem e destino!");
+  const adicionarDestino = (latlng) => {
+    if (markerDestinoRef.current) markerDestinoRef.current.remove();
+    markerDestinoRef.current = L.marker(latlng).addTo(mapaRef.current);
+  };
 
+  const limparTudo = () => {
+    if (rotaLayerRef.current) rotaLayerRef.current.remove();
+    if (markerOrigemRef.current) markerOrigemRef.current.remove();
+    if (markerDestinoRef.current) markerDestinoRef.current.remove();
+    setPoints([]);
+    setDistancia(null);
+    setDuracao(null);
+  };
+
+  const calcularRota = async ([origem, destino]) => {
     try {
-      setDistancia(null);
-      setDuracao(null);
+      const coords = `${origem[1]},${origem[0]};${destino[1]},${destino[0]}`;
+      const res = await axios.get(`${osrmURL}/${coords}`, {
+        params: {
+          overview: "full",
+          geometries: "geojson",
+        },
+      });
 
-      const coordOrigem = await geocodeEndereco(origem);
-      const coordDestino = await geocodeEndereco(destino);
-
-      const { data } = await axios.get(
-        "http://localhost:5001/route/v1/driving/",
-        {
-          params: {
-            origem: coordOrigem,
-            destino: coordDestino,
-          },
-      
-        }
-      );
-
-      if (!data.rota) throw new Error("Erro ao calcular rota");
-
-      const coords = data.rota.coordinates.map(([lon, lat]) => [lat, lon]);
+      const rota = res.data.routes[0];
+      const linha = rota.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
 
       if (rotaLayerRef.current) rotaLayerRef.current.remove();
 
-      rotaLayerRef.current = L.polyline(coords, {
+      rotaLayerRef.current = L.polyline(linha, {
         color: "blue",
         weight: 5,
         opacity: 0.8,
@@ -134,16 +114,9 @@ export default function Map({ setShowMap, setShowLocal }) {
 
       mapaRef.current.fitBounds(rotaLayerRef.current.getBounds());
 
-      setDistancia(typeof data.distancia === "number" ? data.distancia : 0);
-      setDuracao(typeof data.duracao === "number" ? data.duracao : 0);
+      setDistancia(rota.distance / 1000);
+      setDuracao(rota.duration / 60);
       setSheetHeight(window.innerHeight / 2);
-
-      if (destino !== ultimoDestino) {
-        localStorage.setItem("ultimo_destino", destino);
-        setUltimoDestino(destino);
-        setDestinoSalvo(true);
-        setTimeout(() => setDestinoSalvo(false), 3000);
-      }
     } catch (err) {
       alert("Erro ao calcular rota.");
     }
@@ -172,25 +145,20 @@ export default function Map({ setShowMap, setShowLocal }) {
     document.body.style.userSelect = "";
   };
 
-  const handleDestinoFocus = () => {
-    setSheetHeight(window.innerHeight / 2);
-    setShowOrigem(true);
-  };
-
   const formatarDuracao = (minutos) => {
     const h = Math.floor(minutos / 60);
     const m = Math.round(minutos % 60);
     return `${h > 0 ? `${h}h ` : ""}${m}min`;
   };
 
-  const preencherUltimoDestino = () => {
-    if (ultimoDestino) {
-      setDestino(ultimoDestino);
-    }
-  };
-
   return (
     <div className="relative h-screen w-full z-40 overflow-hidden">
+      {ativo && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-[9999] text-sm">
+          💡 Backend ativo: mensagem recebida!
+        </div>
+      )}
+
       <div id="map" className="absolute top-0 left-0 w-full h-full z-0"></div>
 
       <div className="relative z-10 p-2">
@@ -244,88 +212,23 @@ export default function Map({ setShowMap, setShowLocal }) {
           }}
         ></div>
 
-        <h2 className="text-xl font-bold mb-4 text-center">Pra onde vamos hoje!</h2>
+        <h2 className="text-xl font-bold mb-4 text-center">Clique em 2 pontos no mapa</h2>
 
-        {showOrigem && (
-          <div className="relative mb-3">
-            <input
-              type="text"
-              value={origem}
-              onChange={(e) => setOrigem(e.target.value)}
-              placeholder="Meu Local"
-              className="border border-gray-300 rounded-full p-2 pl-10 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
-            <MapIcon
-              className="absolute left-3 top-2.5 text-green-500 animate-bounce"
-              size={20}
-            />
+        {distancia !== null && duracao !== null && (
+          <div className="mt-6 flex flex-col items-center justify-center gap-3 text-gray-800">
+            <div className="flex items-center gap-2 text-lg">
+              <MapPin className="w-5 h-5 text-blue-600" />
+              <span>
+                <strong>Distância:</strong> {distancia.toFixed(2)} km
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-lg">
+              <Clock className="w-5 h-5 text-green-600" />
+              <span>
+                <strong>Duração:</strong> {formatarDuracao(duracao)}
+              </span>
+            </div>
           </div>
-        )}
-
-        <div className="relative mb-3">
-          <input
-            type="text"
-            value={destino}
-            onChange={(e) => setDestino(e.target.value)}
-            onFocus={handleDestinoFocus}
-            placeholder="Para Onde Vai"
-            className="border border-gray-300 rounded-full p-2 pl-10 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
-          <MapPin
-            className="absolute left-3 top-2.5 text-blue-500 animate-bounce"
-            size={20}
-          />
-        </div>
-
-       {ultimoDestino && ultimoDestino.trim() !== "" && (
-  <div className="mb-3">
-    <label className="block mb-1 text-gray-700 font-semibold">
-      Último destino disponível:
-    </label>
-
-   
-
-    <button
-      onClick={preencherUltimoDestino}
-      className="flex flex-col items-start justify-center gap-1 bg-yellow-300 text-gray-900 py-2 px-4 rounded-xl w-full hover:bg-yellow-400 transition text-left"
-      type="button"
-    >
-      <div className="flex items-center gap-2">
-        <History className="w-5 h-5" />
-        <span className="font-semibold">Repetir último destino</span>
-      </div>
-      <span className="text-sm text-gray-800 truncate">{ultimoDestino}</span>
-    </button>
-  </div>
-)}
-
-
-        {showOrigem && (
-          <>
-            <button
-              onClick={calcularRota}
-              className="bg-blue-500 text-white py-2 rounded-md hover:bg-green-600 transition"
-            >
-              Calcular Valor
-            </button>
-
-            {distancia !== null && duracao !== null && (
-              <div className="mt-6 flex flex-col items-center justify-center gap-3 text-gray-800">
-                <div className="flex items-center gap-2 text-lg">
-                  <MapPin className="w-5 h-5 text-blue-600" />
-                  <span>
-                    <strong>Distância:</strong> {distancia.toFixed(2)} km
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-lg">
-                  <Clock className="w-5 h-5 text-green-600" />
-                  <span>
-                    <strong>Duração:</strong> {formatarDuracao(duracao)}
-                  </span>
-                </div>
-              </div>
-            )}
-          </>
         )}
       </div>
     </div>

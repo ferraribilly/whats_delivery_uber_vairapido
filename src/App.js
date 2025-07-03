@@ -80,6 +80,13 @@ function App() {
               path="/calculo_rota"
               element={<RedirectToStatic path="/calculo_rota/index.html" />}
             />
+            {/* Rota para abrir o HTML estático em public/cardapios_digital/lanchonete */}
+            <Route
+              exact
+              path="/cardapio_online1"
+              element={<RedirectToStatic path="/cardapio_digital/lanchonete/index.html" />}
+            />
+            
           </Routes>
         </Router>
       </SocketContext.Provider>
