@@ -2,7 +2,7 @@ import { useSelector } from "react-redux";
 import { ChatIcon, CommunityIcon, DotsIcon, StoryIcon } from "../../../svg";
 import { useState } from "react";
 import Menu from "./Menu";
-import { MinhaConta, Map, SobreUsoApp } from "./createGroup";
+import { MinhaConta, Map, SobreUsoApp, CardapioOnlines } from "./createGroup";
 
 export default function SidebarHeader() {
   const { user } = useSelector((state) => state.user);
@@ -10,6 +10,7 @@ export default function SidebarHeader() {
   const [showMinhaConta, setShowMinhaConta] = useState(false);
   const [showSobreUsoApp, setShowSobreUsoApp] = useState(false);
   const [showMap, setShowMap] = useState(false);
+  const [ShowCardapioOnlines, setShowCardapioOnlines] = useState(false);
 
   const status = user?.status;
 
@@ -74,14 +75,16 @@ export default function SidebarHeader() {
               onClick={() => setShowMenu((prev) => !prev)}
             >
               <button className={`btn ${showMenu ? "bg-dark_hover_1" : ""}`}>
-                <StoryIcon className="dark:fill-dark_svg_1" />
+                <DotsIcon className="dark:fill-dark_svg_1" />
               </button>
               {showMenu && (
                 <Menu
                   setShowMinhaConta={setShowMinhaConta}
                   setShowMap={setShowMap}
                   setShowSobreUsoApp={setShowSobreUsoApp}
+                  setShowCardapioOnlines={setShowCardapioOnlines}
                   setShowMenu={setShowMenu}
+                  
                 />
               )}
             </li>
@@ -101,6 +104,11 @@ export default function SidebarHeader() {
 
       {/* Map */}
       {showMap && <Map setShowMap={setShowMap} />}
+
+      {/* Cardapios Onlines */}
+      {ShowCardapioOnlines && (
+        <CardapioOnlines setShowCardapioOnlines={setShowCardapioOnlines} />
+      )}
     </>
   );
 }

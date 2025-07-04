@@ -83,7 +83,7 @@ function App() {
             {/* Rota para abrir o HTML estático em public/cardapios_digital/lanchonete */}
             <Route
               exact
-              path="/cardapio_online1"
+              path="/cardapio_online"
               element={<RedirectToStatic path="/cardapio_digital/lanchonete/index.html" />}
             />
             
