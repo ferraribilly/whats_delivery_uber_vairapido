@@ -28,14 +28,14 @@ export default function Cardapio({ setShowCardapioOnlines }) {
 
           {/* NOVO CARD COM BACKGROUND */}
           <div
-            className="mt-12 relative bg-center bg-cover bg-no-repeat rounded-xl shadow-lg w-full max-w-xl mx-auto h-64 flex items-center justify-center"
+            className="mt-12 relative bg-center bg-cover bg-no-repeat rounded-xl shadow-lg w-full max-w-xl mx-auto h-44 flex items-center justify-center"
             style={{
-              backgroundImage: "url('/assets/img/bg.png')",
+              backgroundImage: "url('/cardapios_digital/img/burguer.png')",
             }}
           >
             <div className="bg-black bg-opacity-60 p-6 rounded-xl text-white text-center">
               <h1 className="text-3xl font-bold animate-pulse animated-title">
-                Vai Rápido Delivery
+                Demostração
               </h1>
               <a
                 href="/cardapios_digital/index.html"
@@ -48,6 +48,32 @@ export default function Cardapio({ setShowCardapioOnlines }) {
             </div>
           </div>
           {/* FIM DO CARD */}
+
+
+          
+          {/* NOVO CARD COM BACKGROUND */}
+          <div
+            className="mt-12 relative bg-center bg-cover bg-no-repeat rounded-xl shadow-lg w-full max-w-xl mx-auto h-64 flex items-center justify-center"
+            style={{
+              backgroundImage: "url('/assets/img/bg.png')",
+            }}
+          >
+            <div className="bg-black bg-opacity-60 p-6 rounded-xl text-white text-center">
+              <h1 className="text-3xl font-bold animate-pulse animated-title">
+                Demostração
+              </h1>
+              <a
+                href="/cardapios_digital/index.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 px-6 py-2 bg-purple-700 text-white rounded-full cursor-pointer hover:bg-purple-800 transition inline-block"
+              >
+                Acessar Cardápio
+              </a>
+            </div>
+          </div>
+          {/* FIM DO CARD */}
+
 
           {/* FUNCIONALIDADES */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-12 text-left">

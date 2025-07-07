@@ -14,8 +14,11 @@ import Login from "./pages/login";
 import Register from "./pages/register";
 import EscolherPerfil from "./pages/escolherperfil";
 import RegisterUber from "./pages/registeruber";
-import Store from "./components/Store/Store";
+import Contrato from "./pages/contrato";
 import ConfirmarPagamento from "./pages/confirmarpagamento";
+import Success from "./pages/success";
+import Failure from "./pages/failure";
+import Pending from "./pages/pending";
 
 //socket io
 const socket = io(process.env.REACT_APP_API_ENDPOINT.split("/api/v1")[0]);
@@ -60,9 +63,31 @@ function App() {
             />
             <Route
               exact
-              path="/pagamento_taxas"
-              element={!token ? <Store /> : <Navigate to="/" />}
+              path="/contrato"
+              element={!token ? <Contrato /> : <Navigate to="/" />}
             />
+
+
+             {/**Rotas aqui direcionamento vindos do backend  */}
+             <Route
+              exact
+              path="/success"
+              element={!token ? <Success /> : <Navigate to="/" />}
+            />
+            {/**Rotas aqui direcionamento vindos do backend  */}
+             <Route
+              exact
+              path="/failure"
+              element={!token ? <Failure /> : <Navigate to="/" />}
+            />
+             {/**Rotas aqui direcionamento vindos do backend  */}
+             <Route
+              exact
+              path="/pending"
+              element={!token ? <Pending /> : <Navigate to="/" />}
+            />
+
+
             <Route
               exact
               path="/login"

@@ -85,6 +85,7 @@ export default function RegisterForm() {
             register={register}
             error={errors?.email?.message}
           />
+         
           <AuthInput
             name="status"
             type="text"

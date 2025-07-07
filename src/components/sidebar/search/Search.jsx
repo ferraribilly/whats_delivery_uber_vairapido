@@ -7,6 +7,7 @@ export default function Search({ searchLength, setSearchResults }) {
   const { user } = useSelector((state) => state.user);
   const { token } = user;
   const [show, setShow] = useState(false);
+
   const handleSearch = async (e) => {
     if (e.target.value && e.key === "Enter") {
       try {
@@ -18,19 +19,18 @@ export default function Search({ searchLength, setSearchResults }) {
             },
           }
         );
-        setSearchResults(data);
+        setSearchResults(data); // sem filtro aqui
       } catch (error) {
-        console.log(error.response.data.error.message);
+        console.log(error?.response?.data?.error?.message || "Erro na busca");
       }
     } else {
       setSearchResults([]);
     }
   };
+
   return (
     <div className="h-[49px] py-1.5">
-      {/*Container*/}
       <div className="px-[10px]">
-        {/*Search input container*/}
         <div className="flex items-center gap-x-2">
           <div className="w-full flex dark:bg-dark_bg_2 rounded-lg pl-2">
             {show || searchLength > 0 ? (

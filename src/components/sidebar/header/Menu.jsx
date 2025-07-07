@@ -5,6 +5,7 @@ import LogoutIcon from "../../../svg/Logout";
 import SobreAppIcon from "../../../svg/SobreApp"
 import MinhaContaIcon from "../../../svg/MinhaConta";
 import LanchonetesIcon from "../../../svg/Lanchonetes";
+import ExecelIcon from "../../../svg/Execel";
 export default function Menu({ setShowMinhaConta,setShowMap, setShowSobreUsoApp, setShowCardapioOnlines }) {
   const dispatch = useDispatch();
 
@@ -35,6 +36,13 @@ export default function Menu({ setShowMinhaConta,setShowMap, setShowSobreUsoApp,
         </li>
 
          {/** Acesso as Ferramentas Execel */}
+            <li
+         className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3 flex items-center gap-2"
+         onClick={() => setShowCardapioOnlines(true)}
+        >
+        <ExecelIcon className="dark:fill-dark_svg_1 w-6 h-6" />
+         <span>Execel</span>
+        </li>
 
 
 

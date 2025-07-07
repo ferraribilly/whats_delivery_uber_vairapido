@@ -19,6 +19,7 @@ export default function Map({ setShowMap, setShowLocal }) {
   const [ultimoDestino, setUltimoDestino] = useState("");
   const [statusApiHtml, setStatusApiHtml] = useState("");
   const [modoToqueAtivo, setModoToqueAtivo] = useState(false);
+  const [formaPagamento, setFormaPagamento] = useState("");
 
   const { user } = useSelector((state) => state.user);
 
@@ -35,7 +36,11 @@ export default function Map({ setShowMap, setShowLocal }) {
     axios
       .get(`${apiURL}`)
       .then((res) => setStatusApiHtml(res.data))
-      .catch(() => setStatusApiHtml("<h1 style='color:red;text-align:center;'>API OFFLINE ❌</h1>"));
+      .catch(() =>
+        setStatusApiHtml(
+          "<h1 style='color:red;text-align:center;'>API OFFLINE ❌</h1>"
+        )
+      );
   }, [apiURL]);
 
   useEffect(() => {
@@ -89,9 +94,12 @@ export default function Map({ setShowMap, setShowLocal }) {
         async (position) => {
           const { latitude, longitude } = position.coords;
           try {
-            const { data } = await axios.get("https://nominatim.openstreetmap.org/reverse", {
-              params: { lat: latitude, lon: longitude, format: "json" },
-            });
+            const { data } = await axios.get(
+              "https://nominatim.openstreetmap.org/reverse",
+              {
+                params: { lat: latitude, lon: longitude, format: "json" },
+              }
+            );
 
             setOrigem(data?.display_name || `${latitude},${longitude}`);
             setShowOrigem(true);
@@ -118,9 +126,12 @@ export default function Map({ setShowMap, setShowLocal }) {
 
   const geocodeEndereco = async (endereco) => {
     try {
-      const { data } = await axios.get("https://nominatim.openstreetmap.org/search", {
-        params: { q: endereco, format: "json", limit: 1 },
-      });
+      const { data } = await axios.get(
+        "https://nominatim.openstreetmap.org/search",
+        {
+          params: { q: endereco, format: "json", limit: 1 },
+        }
+      );
 
       if (data.length === 0) throw new Error("Endereço não encontrado");
       return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
@@ -234,8 +245,8 @@ export default function Map({ setShowMap, setShowLocal }) {
     const deltaY = startYRef.current - currentY;
     let newHeight = startHeightRef.current + deltaY;
 
-    const maxHeight = window.innerHeight * 1.8;
-    const minHeight = window.innerHeight * 1.2;
+    const maxHeight = window.innerHeight * 1.0;
+    const minHeight = window.innerHeight * 0.8;
 
     if (newHeight > maxHeight) newHeight = maxHeight;
     if (newHeight < minHeight) newHeight = minHeight;
@@ -246,6 +257,77 @@ export default function Map({ setShowMap, setShowLocal }) {
   const onDragEnd = () => {
     draggingRef.current = false;
   };
+
+ const calcularDescontoHorario = (percentual) => {
+    const agora = new Date();
+    const minutos = agora.getMinutes();
+    return minutos < 30 || (minutos >= 30 && minutos < 60) ? percentual : 0;
+  };
+
+  const calcularPrecoCarro = () => {
+    if (distancia === null || duracao === null) return "-";
+    const precoPorKm = 2.0;
+    const precoPorMinuto = 0.08;
+    const taxaFixa = 0.20;
+
+    let preco = precoPorKm * distancia + precoPorMinuto * duracao + taxaFixa;
+
+    const desconto = calcularDescontoHorario(0.05);
+    if (desconto > 0) preco = preco * (1 - desconto);
+
+    return `R$ ${preco.toFixed(2)}`;
+  };
+
+  const calcularPrecoMoto = () => {
+    if (distancia === null || duracao === null) return "-";
+    const precoPorKm = 2.0;
+    const precoPorMinuto = 0.08;
+    const taxaFixa = 0.20;
+
+    let preco = precoPorKm * distancia + precoPorMinuto * duracao + taxaFixa;
+
+    const desconto = calcularDescontoHorario(0.03);
+    if (desconto > 0) preco = preco * (1 - desconto);
+
+    return `R$ ${preco.toFixed(2)}`;
+  };
+
+  const calcularPrecoEntrega = () => {
+    if (distancia === null || duracao === null) return "-";
+    const precoPorKm = 2.0;
+    const precoPorMinuto = 0.08;
+    const taxaFixa = 0.20;
+
+    const preco = precoPorKm * distancia + precoPorMinuto * duracao + taxaFixa;
+
+    return `R$ ${preco.toFixed(2)}`;
+  };
+
+  const handleEscolherMotorista = (tipo) => {
+  if (!formaPagamento) {
+    alert("Selecione uma forma de pagamento.");
+    return;
+  }
+
+  let valorFinal = "-";
+  if (tipo === "carro") valorFinal = calcularPrecoCarro();
+  else if (tipo === "moto") valorFinal = calcularPrecoMoto();
+  else if (tipo === "entregador") valorFinal = calcularPrecoEntrega();
+
+  const dadosViagem = {
+    origem,
+    destino,
+    distancia,
+    duracao,
+    formaPagamento,
+    tipo,
+    valor: valorFinal,
+  };
+
+  localStorage.setItem("viagem_atual", JSON.stringify(dadosViagem));
+  setShowMap(false);
+};
+
 
   return (
     <div className="relative h-screen w-full z-40 overflow-hidden">
@@ -281,10 +363,10 @@ export default function Map({ setShowMap, setShowLocal }) {
           left: 0,
           right: 0,
           height: sheetHeight,
-          backgroundColor: "rgba(255, 255, 255, 0.33)",
+          backgroundColor: "rgba(252, 252, 252, 0.7)",
           borderTopLeftRadius: "30px",
           borderTopRightRadius: "30px",
-          boxShadow: "0 -2px 10px rgba(0,0,0,0.1), 0 0 15px rgba(0,0,0,0.05)",
+          boxShadow: "0 -2px 10px rgb(0, 0, 0), 0 0 15px rgba(0,0,0,0.05)",
           padding: "16px",
           zIndex: 60,
           display: "flex",
@@ -343,7 +425,7 @@ export default function Map({ setShowMap, setShowLocal }) {
 
         {ultimoDestino && (
           <div className="mb-3">
-            <label className="block mb-1 text-gray-700 font-semibold">Último destino disponível:</label>
+            <label className="block mb-1 text-gray-700 font-semibold">Último destino visitado:</label>
             <button
               onClick={preencherUltimoDestino}
               className="flex flex-col items-start justify-center gap-1 bg-yellow-300 text-gray-900 py-2 px-4 rounded-xl w-full hover:bg-yellow-400 transition text-left"
@@ -371,38 +453,131 @@ export default function Map({ setShowMap, setShowLocal }) {
               <div className="mt-6 flex flex-col items-center justify-center gap-3 text-gray-800">
                 <div className="flex items-center gap-2 text-lg">
                   <MapPin className="w-5 h-5 text-blue-600" />
-                  <span><strong>Distância:</strong> {distancia.toFixed(2)} km</span>
-                </div>
-                <div className="flex items-center gap-2 text-lg">
-                  <Clock className="w-5 h-5 text-green-600" />
-                  <span><strong>Duração:</strong> {formatarDuracao(duracao)}</span>
+                  <span>
+                    <strong>Distância:</strong> {distancia.toFixed(2)} km
+                  </span>
+                  <div className="flex items-center gap-2 text-lg">
+                    <Clock className="w-5 h-5 text-green-600" />
+                    <span>
+                      <strong>Duração:</strong> {formatarDuracao(duracao)}
+                    </span>
+                  </div>
                 </div>
 
-                {/* ==== CARDS NOVOS ==== */}
+                {/* ==== ESCOLHA DE PAGAMENTO ==== */}
                 <div className="w-full mt-6 space-y-4">
-                  <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-md">
-                    <div className="flex items-center gap-4">
-                      <img src="https://cdn-icons-png.flaticon.com/512/743/743131.png" alt="Carro" className="w-12 h-12" />
-                      <div>
-                        <strong className="block text-gray-800 text-lg">R$ 19,90</strong>
-                        <span className="text-sm text-gray-600">Corrida de carro</span>
-                      </div>
-                    </div>
-                    <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Chamar</button>
-                  </div>
-
-                  <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-md">
-                    <div className="flex items-center gap-4">
-                      <img src="https://cdn-icons-png.flaticon.com/512/201/201818.png" alt="Moto" className="w-12 h-12" />
-                      <div>
-                        <strong className="block text-gray-800 text-lg">R$ 12,90</strong>
-                        <span className="text-sm text-gray-600">Corrida de moto</span>
-                      </div>
-                    </div>
-                    <button className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">Chamar</button>
+                  <strong className="block text-gray-800 text-lg">
+                    Escolha a forma de pagamento
+                  </strong>
+                  <div className="flex justify-between bg-white p-4 rounded-xl shadow-md">
+                    {[
+                      { valor: "pix", img: "pix.svg", label: "Pix" },
+                      {
+                        valor: "cartao",
+                        img: "cartao-de-credito-mercado-pago.webp",
+                        label: "Cartão Todas Bandeiras",
+                      },
+                      { valor: "dinheiro", img: "financa.png", label: "Dinheiro" },
+                      { valor: "maquininha", img: "maquina-de-cartao.png", label: "Maquininha" },
+                    ].map(({ valor, img, label }) => (
+                      <label
+                        key={valor}
+                        className="flex flex-col items-center cursor-pointer"
+                      >
+                        <input
+                          type="radio"
+                          name="formaPagamento"
+                          value={valor}
+                          checked={formaPagamento === valor}
+                          onChange={(e) => setFormaPagamento(e.target.value)}
+                          className="mb-2 accent-blue-600"
+                        />
+                        <img
+                          src={`/assets/img/${img}`}
+                          alt={label}
+                          className="w-16 h-16 object-contain"
+                        />
+                        <span className="mt-2 text-sm text-gray-700">{label}</span>
+                      </label>
+                    ))}
                   </div>
                 </div>
-                {/* ==== FIM DOS CARDS ==== */}
+
+                {/* ==== CARDS ESCOLHER VEÍCULO ==== */}
+                <div className="w-full mt-6 space-y-4">
+                  {/* Carros */}
+                  <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-md">
+                    <div className="flex items-center gap-4">
+                      <img
+                        src="/assets/img/UberX.png"
+                        alt="Carro"
+                        className="w-32 h-32"
+                      />
+                      <div>
+                        <strong className="block text-gray-800 text-lg">
+                          Pop
+                        </strong>
+                        <p className="text-green-700 font-semibold mt-2">
+                          Valor estimado: {calcularPrecoCarro()}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleEscolherMotorista("carro")}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                    >
+                      Selecionar
+                    </button>
+                  </div>
+
+                  {/* Motos */}
+                  <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-md">
+                    <div className="flex items-center gap-4">
+                      <img
+                        src="/assets/img/moto.png"
+                        alt="Moto"
+                        className="w-32 h-32"
+                      />
+                      <div>
+                        <strong className="block text-gray-800 text-lg">Motos</strong>
+                        <p className="text-green-700 font-semibold mt-2">
+                          Valor estimado: {calcularPrecoMoto()}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleEscolherMotorista("moto")}
+                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                    >
+                      Selecionar
+                    </button>
+                  </div>
+
+                  {/* Entregadores */}
+                  <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-md">
+                    <div className="flex items-center gap-4">
+                      <img
+                        src="/assets/img/entregadores.png"
+                        alt="Entregadores"
+                        className="w-32 h-32"
+                      />
+                      <div>
+                        <strong className="block text-gray-800 text-lg">
+                          Entregas ou contratar serviços Seguros
+                        </strong>
+                        <p className="text-green-700 font-semibold mt-2">
+                          Valor estimado: {calcularPrecoEntrega()}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleEscolherMotorista("entregador")}
+                      className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600"
+                    >
+                      Selecionar
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </>

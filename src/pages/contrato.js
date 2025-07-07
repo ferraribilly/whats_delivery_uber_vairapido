@@ -1,13 +1,13 @@
-import Store from "../components/Store/Assinatura";
+import Contrato from "../components/auth/Contrato";
 
 
-export default function Assinatura() {
+export default function TermoContrato() {
   return (
     <div className="h-screen dark:bg-dark_bg_1 flex items-center justify-center py-[19px] overflow-hidden">
       {/*Container*/}
       <div className="flex w-[1600px] mx-auto h-full">
         {/* */}
-        <Store />
+        <Contrato />
       </div>
     </div>
   );

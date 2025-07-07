@@ -2,7 +2,6 @@ import { useDispatch, useSelector } from "react-redux";
 import SocketContext from "../../../context/SocketContext";
 import { open_create_conversation } from "../../../features/chatSlice";
 
-
 function Contact({ contact, setSearchResults, socket, setShowSidebar }) {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user);
@@ -23,7 +22,7 @@ function Contact({ contact, setSearchResults, socket, setShowSidebar }) {
   return (
     <li
       onClick={openConversation}
-      className="list-none h-[72px] hover:dark:bg-dark_bg_2 cursor-pointer dark:text-dark_text_1 px-[10px]"
+      className="list-none h-[auto] hover:dark:bg-dark_bg_2 cursor-pointer dark:text-dark_text_1 px-[10px]"
     >
       <div className="flex items-center gap-x-3 py-[10px]">
         <div className="flex items-center gap-x-3">
@@ -38,10 +37,8 @@ function Contact({ contact, setSearchResults, socket, setShowSidebar }) {
             <h1 className="font-bold flex items-center gap-x-2">
               {contact.name}
             </h1>
-            <div>
-              <div className="flex items-center gap-x-1 dark:text-dark_text_2">
-                <p>{contact.status}</p>
-              </div>
+            <div className="flex items-center gap-x-1 dark:text-dark_text_2">
+              <p>{contact.status}</p>
             </div>
           </div>
         </div>

@@ -44,7 +44,7 @@ export default function SidebarHeader() {
           {/* user icons */}
           <ul className="flex items-center gap-x-2.5 relative">
             {/* Botão CommunityIcon redireciona para URL */}
-            <li className="relative">
+            {/* <li className="relative">
               <a
                 href="/calculo_rota/index.html"
                 target="_blank"
@@ -53,10 +53,13 @@ export default function SidebarHeader() {
               >
                 <CommunityIcon className="dark:fill-dark_svg_1" />
               </a>
-            </li>
+            </li> */}
+
+
+
 
             {/* Mostra só se status for "uber" */}
-            {status === "uber" && (
+            {status === "" && (
               <li className="relative">
                 <a
                   href="https://waze.com"

@@ -85,13 +85,6 @@ export default function RegisterForm() {
             register={register}
             error={errors?.email?.message}
           />
-           <AuthInput
-            name="telefone"
-            type="text"
-            placeholder="telefone"
-            register={register}
-            error={errors?.telefone?.message}
-          />
           <AuthInput
             name="cpf"
             type="text"
