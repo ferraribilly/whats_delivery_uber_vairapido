@@ -4,11 +4,12 @@ export default function Picture({
   readablePicture,
   setReadablePicture,
   setPicture,
+  label = "Foto (Opcional)", // ✅ label customizável
 }) {
   const [error, setError] = useState("");
   const inputRef = useRef();
 
-  const hanldePicture = (e) => {
+  const handlePicture = (e) => {
     const pic = e.target.files[0];
 
     if (
@@ -16,10 +17,10 @@ export default function Picture({
       pic?.type !== "image/png" &&
       pic?.type !== "image/webp"
     ) {
-      setError(`${pic?.name} format is not supported.`);
+      setError(`${pic?.name} formato não suportado (apenas JPG, PNG, WEBP).`);
       return;
     } else if (pic?.size > 1024 * 1024 * 5) {
-      setError(`${pic?.name} is too large, maximum 5MB allowed.`);
+      setError(`${pic?.name} é muito grande. Máximo 5MB.`);
       return;
     }
 
@@ -36,19 +37,20 @@ export default function Picture({
   const handleChangePic = () => {
     setPicture("");
     setReadablePicture("");
+    inputRef.current.value = ""; // ✅ reseta input
   };
 
   return (
-    <div className="mt-8 content-center dark:text-dark_text_1 space-y-1">
+    <div className="mt-6 content-center dark:text-dark_text_1 space-y-1">
       <label htmlFor="picture" className="text-sm font-bold tracking-wide">
-        Foto (Opcional)
+        {label}
       </label>
 
       {readablePicture ? (
         <div>
           <img
             src={readablePicture}
-            alt="picture"
+            alt="preview"
             className="w-20 h-20 object-cover rounded-full"
           />
           <div
@@ -74,12 +76,12 @@ export default function Picture({
         hidden
         ref={inputRef}
         accept="image/png,image/jpeg,image/webp"
-        onChange={hanldePicture}
+        onChange={handlePicture}
       />
 
       {error && (
         <div className="mt-2">
-          <p className="text-red-400">{error}</p>
+          <p className="text-red-400 text-xs">{error}</p>
         </div>
       )}
     </div>

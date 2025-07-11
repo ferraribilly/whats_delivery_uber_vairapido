@@ -245,8 +245,8 @@ export default function Map({ setShowMap, setShowLocal }) {
     const deltaY = startYRef.current - currentY;
     let newHeight = startHeightRef.current + deltaY;
 
-    const maxHeight = window.innerHeight * 1.0;
-    const minHeight = window.innerHeight * 0.8;
+    const maxHeight = window.innerHeight * 1.5;
+    const minHeight = window.innerHeight * 0.5;
 
     if (newHeight > maxHeight) newHeight = maxHeight;
     if (newHeight < minHeight) newHeight = minHeight;
@@ -258,7 +258,7 @@ export default function Map({ setShowMap, setShowLocal }) {
     draggingRef.current = false;
   };
 
- const calcularDescontoHorario = (percentual) => {
+  const calcularDescontoHorario = (percentual) => {
     const agora = new Date();
     const minutos = agora.getMinutes();
     return minutos < 30 || (minutos >= 30 && minutos < 60) ? percentual : 0;
@@ -267,7 +267,7 @@ export default function Map({ setShowMap, setShowLocal }) {
   const calcularPrecoCarro = () => {
     if (distancia === null || duracao === null) return "-";
     const precoPorKm = 2.0;
-    const precoPorMinuto = 0.08;
+    const precoPorMinuto = 0;
     const taxaFixa = 0.20;
 
     let preco = precoPorKm * distancia + precoPorMinuto * duracao + taxaFixa;
@@ -281,12 +281,12 @@ export default function Map({ setShowMap, setShowLocal }) {
   const calcularPrecoMoto = () => {
     if (distancia === null || duracao === null) return "-";
     const precoPorKm = 2.0;
-    const precoPorMinuto = 0.08;
+    const precoPorMinuto = 0;
     const taxaFixa = 0.20;
 
     let preco = precoPorKm * distancia + precoPorMinuto * duracao + taxaFixa;
 
-    const desconto = calcularDescontoHorario(0.03);
+    const desconto = calcularDescontoHorario(0.10);
     if (desconto > 0) preco = preco * (1 - desconto);
 
     return `R$ ${preco.toFixed(2)}`;
@@ -302,8 +302,8 @@ export default function Map({ setShowMap, setShowLocal }) {
 
     return `R$ ${preco.toFixed(2)}`;
   };
-
-  const handleEscolherMotorista = (tipo) => {
+// 🔁 Função handleEscolherMotorista completa e corrigida
+const handleEscolherMotorista = async (tipo) => {
   if (!formaPagamento) {
     alert("Selecione uma forma de pagamento.");
     return;
@@ -314,6 +314,27 @@ export default function Map({ setShowMap, setShowLocal }) {
   else if (tipo === "moto") valorFinal = calcularPrecoMoto();
   else if (tipo === "entregador") valorFinal = calcularPrecoEntrega();
 
+  const ENDPOINT = process.env.REACT_APP_API_ENDPOINT || "http://localhost:5000/api/v1";
+
+  // 🔍 garante que temos o _id correto
+  const userRedux = user; // vindo do useSelector
+  const userStorage = JSON.parse(localStorage.getItem("user")) || {};
+  const userFinal = {
+    _id: userRedux?._id || userStorage?._id || "usuario-desconhecido",
+    name:
+      userRedux?.name ||
+      userRedux?.nome ||
+      userStorage?.name ||
+      userStorage?.nome ||
+      "Usuário Desconhecido",
+    email:
+      userRedux?.email ||
+      userStorage?.email ||
+      "email@desconhecido.com",
+  };
+
+  console.log("🧪 DEBUG - userFinal:", userFinal);
+
   const dadosViagem = {
     origem,
     destino,
@@ -322,7 +343,21 @@ export default function Map({ setShowMap, setShowLocal }) {
     formaPagamento,
     tipo,
     valor: valorFinal,
+    userId: userFinal._id,
+    name: userFinal.name,
+    email: userFinal.email,
+    tipoVeiculo: tipo,
+    valorCorrida:
+      parseFloat(valorFinal.replace("R$ ", "").replace(",", ".")) || 0,
   };
+
+  try {
+    await axios.post(`${ENDPOINT}/orders`, dadosViagem);
+  } catch (error) {
+    console.error("Erro ao salvar viagem na backend", error);
+    alert("Erro ao salvar a viagem. Tente novamente.");
+    return;
+  }
 
   localStorage.setItem("viagem_atual", JSON.stringify(dadosViagem));
   setShowMap(false);
@@ -363,7 +398,7 @@ export default function Map({ setShowMap, setShowLocal }) {
           left: 0,
           right: 0,
           height: sheetHeight,
-          backgroundColor: "rgba(252, 252, 252, 0.7)",
+          backgroundColor: "rgb(255, 238, 1)",
           borderTopLeftRadius: "30px",
           borderTopRightRadius: "30px",
           boxShadow: "0 -2px 10px rgb(0, 0, 0), 0 0 15px rgba(0,0,0,0.05)",
@@ -397,6 +432,8 @@ export default function Map({ setShowMap, setShowLocal }) {
         ></div>
 
         <h2 className="text-xl font-bold mb-4 text-center">Pra onde vamos hoje!</h2>
+        <div><span className="font-medium ">Nome:</span > {user?.name}</div>
+        <div><span className="font-medium">Email:</span> {user?.email}</div>
 
         {showOrigem && (
           <div className="relative mb-3">
@@ -448,6 +485,9 @@ export default function Map({ setShowMap, setShowLocal }) {
             >
               Calcular Valor
             </button>
+           
+
+            
 
             {distancia !== null && duracao !== null && (
               <div className="mt-6 flex flex-col items-center justify-center gap-3 text-gray-800">
@@ -463,6 +503,7 @@ export default function Map({ setShowMap, setShowLocal }) {
                     </span>
                   </div>
                 </div>
+                
 
                 {/* ==== ESCOLHA DE PAGAMENTO ==== */}
                 <div className="w-full mt-6 space-y-4">
@@ -511,7 +552,7 @@ export default function Map({ setShowMap, setShowLocal }) {
                       <img
                         src="/assets/img/UberX.png"
                         alt="Carro"
-                        className="w-32 h-32"
+                        className="w-12 h-12"
                       />
                       <div>
                         <strong className="block text-gray-800 text-lg">
@@ -536,7 +577,7 @@ export default function Map({ setShowMap, setShowLocal }) {
                       <img
                         src="/assets/img/moto.png"
                         alt="Moto"
-                        className="w-32 h-32"
+                        className="w-12 h-12"
                       />
                       <div>
                         <strong className="block text-gray-800 text-lg">Motos</strong>
@@ -559,11 +600,11 @@ export default function Map({ setShowMap, setShowLocal }) {
                       <img
                         src="/assets/img/entregadores.png"
                         alt="Entregadores"
-                        className="w-32 h-32"
+                        className="w-12 h-12"
                       />
                       <div>
                         <strong className="block text-gray-800 text-lg">
-                          Entregas ou contratar serviços Seguros
+                          Entregas
                         </strong>
                         <p className="text-green-700 font-semibold mt-2">
                           Valor estimado: {calcularPrecoEntrega()}

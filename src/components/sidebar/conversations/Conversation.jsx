@@ -24,7 +24,7 @@ function Conversation({ convo, socket, online, typing, onClick }) {
   const openConversation = async () => {
   let newConvo = await dispatch(open_create_conversation(values));
   socket.emit("join conversation", newConvo.payload._id);
-  if (onClick) onClick(); // ✅ fecha sidebar
+  if (onClick) onClick(); 
 };
 
 

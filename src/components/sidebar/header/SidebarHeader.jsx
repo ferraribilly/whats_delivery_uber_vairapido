@@ -1,8 +1,8 @@
 import { useSelector } from "react-redux";
-import { ChatIcon, CommunityIcon, DotsIcon, StoryIcon } from "../../../svg";
+import {  DotsIcon, StoryIcon } from "../../../svg";
 import { useState } from "react";
 import Menu from "./Menu";
-import { MinhaConta, Map, SobreUsoApp, CardapioOnlines } from "./createGroup";
+import { MinhaConta, Map, SobreUsoApp, CardapioOnlines, ContratoUber } from "./createGroup";
 
 export default function SidebarHeader() {
   const { user } = useSelector((state) => state.user);
@@ -11,6 +11,7 @@ export default function SidebarHeader() {
   const [showSobreUsoApp, setShowSobreUsoApp] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [ShowCardapioOnlines, setShowCardapioOnlines] = useState(false);
+  const [showContratoUber, setShowContratoUber] = useState(false);
 
   const status = user?.status;
 
@@ -29,7 +30,7 @@ export default function SidebarHeader() {
   return (
     <>
       {/* Sidebar header */}
-      <div className="h-[70px] w-full bg-dark flex items-center p16">
+      <div className="h-[70px] w-auto bg-dark flex items-center p16">
         {/* container */}
         <div className="w-full flex items-center justify-between">
           {/* user image */}
@@ -41,40 +42,28 @@ export default function SidebarHeader() {
             />
           </button>
 
+         
+
           {/* user icons */}
           <ul className="flex items-center gap-x-2.5 relative">
-            {/* Botão CommunityIcon redireciona para URL */}
-            {/* <li className="relative">
-              <a
-                href="/calculo_rota/index.html"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn"
-              >
-                <CommunityIcon className="dark:fill-dark_svg_1" />
-              </a>
-            </li> */}
-
+               {/** Acesso ao Map.jsx */}
+          <li
+         className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3 flex items-center gap-2"
+         onClick={() => setShowMap(true)}
+        >
+        <StoryIcon className="dark:fill-dark_svg_1 w-12 h-12" />
+        </li>
+        
+           
 
 
 
             {/* Mostra só se status for "uber" */}
-            {status === "" && (
-              <li className="relative">
-                <a
-                  href="https://waze.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn"
-                >
-                  <StoryIcon className="dark:fill-dark_svg_1" />
-                </a>
-              </li>
-            )}
+           
 
             {/* Menu com 3 pontinhos */}
             <li
-              className="relative"
+              className="relative z-[9999]"
               onClick={() => setShowMenu((prev) => !prev)}
             >
               <button className={`btn ${showMenu ? "bg-dark_hover_1" : ""}`}>
@@ -86,6 +75,7 @@ export default function SidebarHeader() {
                   setShowMap={setShowMap}
                   setShowSobreUsoApp={setShowSobreUsoApp}
                   setShowCardapioOnlines={setShowCardapioOnlines}
+                  setShowContratoUber={setShowContratoUber}
                   setShowMenu={setShowMenu}
                   
                 />
@@ -112,6 +102,8 @@ export default function SidebarHeader() {
       {ShowCardapioOnlines && (
         <CardapioOnlines setShowCardapioOnlines={setShowCardapioOnlines} />
       )}
+       {/* ContratoUber */}
+      {showContratoUber && <ContratoUber setShowContratoUber={setShowContratoUber} />}
     </>
   );
 }

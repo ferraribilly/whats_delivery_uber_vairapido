@@ -57,6 +57,9 @@ body {
   }
 }
 
+
+
+
 .animate-loading-bar {
   animation: loading-bar 12s linear forwards;
 }
