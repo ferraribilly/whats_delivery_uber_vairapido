@@ -1,53 +1,38 @@
 import { useState } from "react";
 import { Conversations } from "./conversations";
 import { SidebarHeader } from "./header";
-import { Notifications, NotificationsPassageiros } from "./notifications";
-import { SearchMotorista, Search } from "./search";
-import { SearchResults } from "./search";
+import { Notifications } from "./notifications";
+import { Search, SheetResults } from "./search";
 
+export default function Sidebar({ onlineUsers, typing }) {
+  const [sheetResults, setSheetResults] = useState([]);
+  const [isOpen, setIsOpen] = useState(true);
 
-export default function Sidebar({ onlineUsers, typing, onCloseSidebar }) {
-  const [searchResults, setSearchResults] = useState([]);
-  const [showSidebar, setShowSidebar] = useState(true);
-
-  if (!showSidebar) return null;
+  if (!isOpen) return null;
 
   return (
-   <div className="w-full h-full select-none bg-dark_bg_2 fixed top-0 left-0 z-50 scrollbar overflow-hidden">
+    <div className="w-full h-full select-none bg-dark_bg_2 fixed top-0 left-0 z-50 scrollbar overflow-hidden">
       <SidebarHeader />
-
       <Notifications />
-
-      <NotificationsPassageiros />
-
-     
       <Search
-        searchLength={searchResults.length}
-        setSearchResults={setSearchResults}
-        onSelectConversation={onCloseSidebar}
+        searchLength={sheetResults.length}
+        setSheetResults={setSheetResults}
       />
       
-      
-      {searchResults.length > -1 ? (
-        <SearchResults
-          searchResults={searchResults}
-          setSearchResults={setSearchResults}
-          setShowSidebar={setShowSidebar}
+
+      {sheetResults.length > 0 ? (
+        <SheetResults
+          sheetResults={sheetResults}
+          setSheetResults={setSheetResults}
+          setSidebarOpen={setIsOpen}
         />
-        
       ) : (
-        
         <Conversations
           onlineUsers={onlineUsers}
           typing={typing}
-         onSelectConversation={onCloseSidebar}
+          setSidebarOpen={setIsOpen}
         />
-
-
-      
       )}
-     
     </div>
-    
   );
 }

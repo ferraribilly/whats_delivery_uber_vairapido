@@ -1,39 +1,19 @@
 import { useSelector } from "react-redux";
-import {  DotsIcon, StoryIcon } from "../../../svg";
+import { ChatIcon, CommunityIcon, DotsIcon, StoryIcon } from "../../../svg";
 import { useState } from "react";
 import Menu from "./Menu";
-import { MinhaConta, Map, SobreUsoApp, CardapioOnlines, ContratoUber } from "./createGroup";
-
+import { CreateGroup } from "./createGroup";
 export default function SidebarHeader() {
   const { user } = useSelector((state) => state.user);
   const [showMenu, setShowMenu] = useState(false);
-  const [showMinhaConta, setShowMinhaConta] = useState(false);
-  const [showSobreUsoApp, setShowSobreUsoApp] = useState(false);
-  const [showMap, setShowMap] = useState(false);
-  const [ShowCardapioOnlines, setShowCardapioOnlines] = useState(false);
-  const [showContratoUber, setShowContratoUber] = useState(false);
-
-  const status = user?.status;
-
-  // Controle para caixa do CommunityIcon
-  const [showVehicleSelector, setShowVehicleSelector] = useState(false);
-
-  // Controle para caixa do StoryIcon (novo)
-  const [showVehicleSelectorStory, setShowVehicleSelectorStory] = useState(false);
-
-  const handleVehicleSelect = (vehicle) => {
-    console.log("Selecionado:", vehicle);
-    setShowVehicleSelector(false);
-    setShowVehicleSelectorStory(false);
-  };
-
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
   return (
     <>
-      {/* Sidebar header */}
-      <div className="h-[70px] w-auto bg-dark flex items-center p16">
+      {/*Sidebar header*/}
+      <div className="h-[80px] dark:bg-white flex items-center p16">
         {/* container */}
         <div className="w-full flex items-center justify-between">
-          {/* user image */}
+          {/*user image*/}
           <button className="btn">
             <img
               src={user.picture}
@@ -41,69 +21,41 @@ export default function SidebarHeader() {
               className="w-full h-full rounded-full object-cover"
             />
           </button>
-
-         
-
-          {/* user icons */}
-          <ul className="flex items-center gap-x-2.5 relative">
-               {/** Acesso ao Map.jsx */}
-          <li
-         className="py-3 pl-5 cursor-pointer hover:bg-dark_bg_3 flex items-center gap-2"
-         onClick={() => setShowMap(true)}
-        >
-        <StoryIcon className="dark:fill-dark_svg_1 w-12 h-12" />
-        </li>
-        
-           
-
-
-
-            {/* Mostra só se status for "uber" */}
-           
-
-            {/* Menu com 3 pontinhos */}
+          {/*user icons*/}
+          <ul className="flex items-center gap-x-2 5">
+            <li>
+              <button className="btn">
+                <CommunityIcon className="dark:fill-dark_svg_1" />
+              </button>
+            </li>
+            <li>
+              <button className="btn">
+                <StoryIcon className="dark:fill-dark_svg_1" />
+              </button>
+            </li>
+            <li>
+              <button className="btn">
+                <ChatIcon className="dark:fill-dark_svg_1" />
+              </button>
+            </li>
             <li
-              className="relative z-[9999]"
+              className="relative"
               onClick={() => setShowMenu((prev) => !prev)}
             >
               <button className={`btn ${showMenu ? "bg-dark_hover_1" : ""}`}>
                 <DotsIcon className="dark:fill-dark_svg_1" />
               </button>
-              {showMenu && (
-                <Menu
-                  setShowMinhaConta={setShowMinhaConta}
-                  setShowMap={setShowMap}
-                  setShowSobreUsoApp={setShowSobreUsoApp}
-                  setShowCardapioOnlines={setShowCardapioOnlines}
-                  setShowContratoUber={setShowContratoUber}
-                  setShowMenu={setShowMenu}
-                  
-                />
-              )}
+              {showMenu ? (
+                <Menu setShowCreateGroup={setShowCreateGroup} />
+              ) : null}
             </li>
           </ul>
         </div>
       </div>
-
-      {/*Minha Conta */}
-      {showMinhaConta && (
-        <MinhaConta setShowMinhaConta={setShowMinhaConta} />
+      {/*Create Group*/}
+      {showCreateGroup && (
+        <CreateGroup setShowCreateGroup={setShowCreateGroup} />
       )}
-
-      {/* Sobre App */}
-      {showSobreUsoApp && (
-        <SobreUsoApp setShowSobreUsoApp={setShowSobreUsoApp} />
-      )}
-
-      {/* Map */}
-      {showMap && <Map setShowMap={setShowMap} />}
-
-      {/* Cardapios Onlines */}
-      {ShowCardapioOnlines && (
-        <CardapioOnlines setShowCardapioOnlines={setShowCardapioOnlines} />
-      )}
-       {/* ContratoUber */}
-      {showContratoUber && <ContratoUber setShowContratoUber={setShowContratoUber} />}
     </>
   );
 }

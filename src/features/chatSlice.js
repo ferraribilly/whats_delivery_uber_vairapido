@@ -50,7 +50,6 @@ export const open_create_conversation = createAsyncThunk(
     }
   }
 );
-
 export const getConversationMessages = createAsyncThunk(
   "conervsation/messages",
   async (values, { rejectWithValue }) => {
@@ -91,7 +90,6 @@ export const sendMessage = createAsyncThunk(
     }
   }
 );
-
 export const createGroupConversation = createAsyncThunk(
   "conervsation/create_group",
   async (values, { rejectWithValue }) => {

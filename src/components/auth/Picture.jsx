@@ -4,71 +4,65 @@ export default function Picture({
   readablePicture,
   setReadablePicture,
   setPicture,
-  label = "Foto (Opcional)", // ✅ label customizável
 }) {
   const [error, setError] = useState("");
   const inputRef = useRef();
-
-  const handlePicture = (e) => {
-    const pic = e.target.files[0];
-
+  const hanldePicture = (e) => {
+    let pic = e.target.files[0];
     if (
-      pic?.type !== "image/jpeg" &&
-      pic?.type !== "image/png" &&
-      pic?.type !== "image/webp"
+      pic.type !== "image/jpeg" &&
+      pic.type !== "image/png" &&
+      pic.type !== "image/webp"
     ) {
-      setError(`${pic?.name} formato não suportado (apenas JPG, PNG, WEBP).`);
+      setError(`${pic.name} format is not supported.`);
       return;
-    } else if (pic?.size > 1024 * 1024 * 5) {
-      setError(`${pic?.name} é muito grande. Máximo 5MB.`);
+    } else if (pic.size > 1024 * 1024 * 5) {
+      setError(`${pic.name} is too large, maximum 5mb allowed.`);
       return;
+    } else {
+      setError("");
+      setPicture(pic);
+      //reading the picture
+      const reader = new FileReader();
+      reader.readAsDataURL(pic);
+      reader.onload = (e) => {
+        setReadablePicture(e.target.result);
+      };
     }
-
-    setError("");
-    setPicture(pic);
-
-    const reader = new FileReader();
-    reader.readAsDataURL(pic);
-    reader.onload = (e) => {
-      setReadablePicture(e.target.result);
-    };
   };
-
   const handleChangePic = () => {
     setPicture("");
     setReadablePicture("");
-    inputRef.current.value = ""; // ✅ reseta input
   };
-
   return (
-    <div className="mt-6 content-center dark:text-dark_text_1 space-y-1">
+    <div className="mt-8 content-center dark:text-dark_text_1 space-y-1">
       <label htmlFor="picture" className="text-sm font-bold tracking-wide">
-        {label}
+        Picture (Optional)
       </label>
-
       {readablePicture ? (
         <div>
           <img
             src={readablePicture}
-            alt="preview"
+            alt="picture"
             className="w-20 h-20 object-cover rounded-full"
           />
+          {/* change pic */}
           <div
             className="mt-2 w-20 py-1 dark:bg-dark_bg_3 rounded-md text-xs font-bold flex items-center justify-center cursor-pointer"
-            onClick={handleChangePic}
+            onClick={() => handleChangePic()}
           >
-            Remover
+            Remove
           </div>
         </div>
       ) : (
         <div
-          className="w-full h-12 dark:bg-dark_bg_3 rounded-md font-bold flex items-center justify-center cursor-pointer"
+          className="w-full h-12 dark:bg-dark_bg_3 rounded-md font-bold flex items-center justify-center cursor-pointer
+        "
           onClick={() => inputRef.current.click()}
         >
-          Upload de Foto
+          Upload picture
         </div>
       )}
-
       <input
         type="file"
         name="picture"
@@ -76,14 +70,12 @@ export default function Picture({
         hidden
         ref={inputRef}
         accept="image/png,image/jpeg,image/webp"
-        onChange={handlePicture}
+        onChange={hanldePicture}
       />
-
-      {error && (
-        <div className="mt-2">
-          <p className="text-red-400 text-xs">{error}</p>
-        </div>
-      )}
+      {/*error*/}
+      <div className="mt-2">
+        <p className="text-red-400">{error}</p>
+      </div>
     </div>
   );
 }

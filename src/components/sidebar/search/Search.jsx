@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import { FilterIcon, ReturnIcon, SearchIcon } from "../../../svg";
 
-export default function Search({ searchLength, setSearchResults }) {
+export default function Search({ searchLength, setSheetResults }) {
   const { user } = useSelector((state) => state.user);
   const { token } = user;
   const [show, setShow] = useState(false);
@@ -19,27 +19,24 @@ export default function Search({ searchLength, setSearchResults }) {
             },
           }
         );
-        setSearchResults(data);
+        setSheetResults(data);
       } catch (error) {
-        console.log(error?.response?.data?.error?.message || "Erro na busca");
+        console.log(error?.response?.data?.error?.message || "Erro ao buscar usuários");
       }
     } else {
-      setSearchResults([]);
+      setSheetResults([]);
     }
   };
-
-  
-
 
   return (
     <div className="h-[49px] py-1.5">
       <div className="px-[10px]">
         <div className="flex items-center gap-x-2">
           <div className="w-full flex dark:bg-dark_bg_2 rounded-lg pl-2">
-            {show || searchLength > 1 ? (
+            {show || searchLength > 0 ? (
               <span
                 className="w-8 flex items-center justify-center rotateAnimation cursor-pointer"
-                onClick={() => setSearchResults([])}
+                onClick={() => setSheetResults([])}
               >
                 <ReturnIcon className="fill-green_1 w-5" />
               </span>
@@ -50,10 +47,10 @@ export default function Search({ searchLength, setSearchResults }) {
             )}
             <input
               type="text"
-              placeholder="Vai Rápido"
+              placeholder="Search or start a new chat"
               className="input"
               onFocus={() => setShow(true)}
-              onBlur={() => searchLength == 1 && setShow(false)}
+              onBlur={() => searchLength === 0 && setShow(false)}
               onKeyDown={(e) => handleSearch(e)}
             />
           </div>

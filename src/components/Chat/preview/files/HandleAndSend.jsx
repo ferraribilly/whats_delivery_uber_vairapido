@@ -99,5 +99,4 @@ const HandleAndSendWithContext = (props) => (
     {(socket) => <HandleAndSend {...props} socket={socket} />}
   </SocketContext.Consumer>
 );
-
 export default HandleAndSendWithContext;

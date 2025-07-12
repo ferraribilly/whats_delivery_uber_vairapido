@@ -7,32 +7,16 @@ import PulseLoader from "react-spinners/PulseLoader";
 import { Link, useNavigate } from "react-router-dom";
 import { changeStatus, registerUser } from "../../features/userSlice";
 import { useState } from "react";
-import Picture from "./Picture"; // ⬅️ Componente de upload
+import Picture from "./Picture";
 import axios from "axios";
-
 const cloud_name = process.env.REACT_APP_CLOUD_NAME;
 const cloud_secret = process.env.REACT_APP_CLOUD_SECRET;
-
 export default function RegisterForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { status, error } = useSelector((state) => state.user);
-
   const [picture, setPicture] = useState();
   const [readablePicture, setReadablePicture] = useState("");
-
-  const [showVehicleFields, setShowVehicleFields] = useState(false);
-
-  // ⬇️ Novos estados de imagem
-  const [cnhPicture, setCnhPicture] = useState();
-  const [cnhReadable, setCnhReadable] = useState("");
-
-  const [docVeiculoPicture, setDocVeiculoPicture] = useState();
-  const [docReadable, setDocReadable] = useState("");
-
-  const [qrCodePicture, setQrCodePicture] = useState();
-  const [qrReadable, setQrReadable] = useState("");
-
   const {
     register,
     handleSubmit,
@@ -41,62 +25,45 @@ export default function RegisterForm() {
   } = useForm({
     resolver: yupResolver(signUpSchema),
   });
-
   const onSubmit = async (data) => {
     dispatch(changeStatus("loading"));
-
-    try {
-      const uploads = [];
-
-      if (picture) uploads.push(uploadImage(picture));
-      if (cnhPicture) uploads.push(uploadImage(cnhPicture));
-      if (docVeiculoPicture) uploads.push(uploadImage(docVeiculoPicture));
-      if (qrCodePicture) uploads.push(uploadImage(qrCodePicture));
-
-      const [profileRes, cnhRes, docRes, qrRes] = await Promise.all(uploads);
-
-      const fullData = {
-        ...data,
-        picture: profileRes?.secure_url || "",
-        fotoCNH: cnhRes?.secure_url || "",
-        fotoDocumentoVeiculo: docRes?.secure_url || "",
-        fotoQrCode: qrRes?.secure_url || "",
-      };
-
-      const res = await dispatch(registerUser(fullData));
-      if (res?.payload?.user) navigate("/");
-    } catch (err) {
-      console.error("Erro ao enviar imagens:", err);
+    if (picture) {
+      //upload to cloudinary and then register user
+      await uploadImage().then(async (response) => {
+        let res = await dispatch(
+          registerUser({ ...data, picture: response.secure_url })
+        );
+        if (res?.payload?.user) {
+          navigate("/");
+        }
+      });
+    } else {
+      let res = await dispatch(registerUser({ ...data, picture: "" }));
+      if (res?.payload?.user) {
+        navigate("/");
+      }
     }
   };
-
-  const uploadImage = async (imgFile) => {
-    const formData = new FormData();
-    formData.append("file", imgFile);
-    formData.append("upload_preset", "vaiturbo");
-
+  const uploadImage = async () => {
+    let formData = new FormData();
+    formData.append("upload_preset", cloud_secret);
+    formData.append("file", picture);
     const { data } = await axios.post(
-      `https://api.cloudinary.com/v1_1/${cloud_name}/upload`,
+      `https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`,
       formData
     );
     return data;
   };
-
   return (
     <div className="min-h-screen w-full flex items-center justify-center overflow-hidden">
-      <div className="w-full max-w-md space-y-8 p-10 rounded-xl">
-        {/* ✅ LOGO */}
-        <img
-          src="/assets/img/logovaiRapidoUber.png"
-          alt="Logo Vai Rápido"
-          className="w-60 h-48 mx-auto mb-0 blinking-logo"
-        />
-
+      {/* Container */}
+      <div className="w-full max-w-md space-y-8 p-10 dark:bg-dark_bg_2 rounded-xl">
+        {/*Heading*/}
         <div className="text-center dark:text-dark_text_1">
-          <h2 className="mt-6 text-3xl font-bold">Bem-vindo(a)</h2>
+          <h2 className="mt-6 text-3xl font-bold">Welcome</h2>
           <p className="mt-2 text-sm">Sign up</p>
         </div>
-
+        {/*Form*/}
         <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-6">
           <AuthInput
             name="name"
@@ -126,85 +93,23 @@ export default function RegisterForm() {
             register={register}
             error={errors?.password?.message}
           />
-
-          {/* ✅ Upload foto de perfil */}
+          {/* Picture */}
           <Picture
-            label="Foto de Perfil"
             readablePicture={readablePicture}
             setReadablePicture={setReadablePicture}
             setPicture={setPicture}
           />
-
-         
-
-          {/* ✅ Campos adicionais se visíveis */}
-          {showVehicleFields && (
-            <div className="space-y-4">
-              <AuthInput
-                name="tipoVeiculo"
-                type="text"
-                placeholder="Tipo de Veículo"
-                register={register}
-                error={errors?.tipoVeiculo?.message}
-              />
-              <AuthInput
-                name="marca"
-                type="text"
-                placeholder="Marca do Veículo"
-                register={register}
-                error={errors?.marca?.message}
-              />
-              <AuthInput
-                name="cor"
-                type="text"
-                placeholder="Cor do Veículo"
-                register={register}
-                error={errors?.cor?.message}
-              />
-              <AuthInput
-                name="placa"
-                type="text"
-                placeholder="Placa do Veículo"
-                register={register}
-                error={errors?.placa?.message}
-              />
-              <AuthInput
-                name="chavePix"
-                type="text"
-                placeholder="Chave Pix"
-                register={register}
-                error={errors?.chavePix?.message}
-              />
-
-              {/* ✅ Uploads adicionais */}
-              <Picture
-                label="Foto CNH (Frente)"
-                readablePicture={cnhReadable}
-                setReadablePicture={setCnhReadable}
-                setPicture={setCnhPicture}
-              />
-              <Picture
-                label="Foto Documento do Veículo"
-                readablePicture={docReadable}
-                setReadablePicture={setDocReadable}
-                setPicture={setDocVeiculoPicture}
-              />
-              <Picture
-                label="Foto QrCode PIX"
-                readablePicture={qrReadable}
-                setReadablePicture={setQrReadable}
-                setPicture={setQrCodePicture}
-              />
+          {/*if we have an error*/}
+          {error ? (
+            <div>
+              <p className="text-red-400">{error}</p>
             </div>
-          )}
-
-          {/* Erro geral */}
-          {error && <p className="text-red-400">{error}</p>}
-
-          {/* Submit */}
+          ) : null}
+          {/*Submit button*/}
           <button
             className="w-full flex justify-center bg-green_1 text-gray-100 p-4 rounded-full tracking-wide
-              font-semibold focus:outline-none hover:bg-green_2 shadow-lg cursor-pointer transition ease-in duration-300"
+          font-semibold focus:outline-none hover:bg-green_2 shadow-lg cursor-pointer transition ease-in duration-300
+          "
             type="submit"
           >
             {status === "loading" ? (
@@ -213,27 +118,16 @@ export default function RegisterForm() {
               "Sign up"
             )}
           </button>
-
+          {/* Sign in link */}
           <p className="flex flex-col items-center justify-center mt-10 text-center text-md dark:text-dark_text_1">
             <span>have an account ?</span>
             <Link
               to="/login"
-              className="hover:underline cursor-pointer transition ease-in duration-300"
+              className=" hover:underline cursor-pointer transition ease-in duration-300"
             >
               Sign in
             </Link>
           </p>
-
-           {/* ✅ Botão para mostrar campos de veículo */}
-          <button
-            type="button"
-            onClick={() => setShowVehicleFields(!showVehicleFields)}
-            className="w-full flex justify-center bg-gold text-dark p-4 rounded-full tracking-
-             font-semibold focus:outline-none hover:bg-gold shadow-lg cursor-pointer transition ease-in duration-300
-            "
-          >
-            {showVehicleFields ? "Ocultar dados do veículo" : "Quero ser um Motorista "}
-          </button>
         </form>
       </div>
     </div>

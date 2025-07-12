@@ -6,23 +6,24 @@ import {
   VideoCallIcon,
 } from "../../../svg";
 import { capitalize } from "../../../utils/string";
-import BackIcon from "../../../svg/Back";
+import { useEffect, useRef, useState } from "react";
 import SocketContext from "../../../context/SocketContext";
+import Peer from "simple-peer";
 import {
   getConversationName,
   getConversationPicture,
 } from "../../../utils/chat";
-
-function ChatHeader({ online, callUser, onBack }) {
+function ChatHeader({ online, callUser, socket }) {
   const { activeConversation } = useSelector((state) => state.chat);
   const { user } = useSelector((state) => state.user);
 
   return (
-    <div className="h-[80px] dark:bg-dark flex items-center p16 select-none">
+    <div className="h-[59px] dark:bg-dark_bg_2 flex items-center p16 select-none">
       {/*Container*/}
       <div className="w-full flex items-center justify-between">
-        {/* Left - Foto e Nome */}
-        <div className="flex items-center gap-x-8">
+        {/*left*/}
+        <div className="flex items-center gap-x-4">
+          {/*Conversation image*/}
           <button className="btn">
             <img
               src={
@@ -34,7 +35,7 @@ function ChatHeader({ online, callUser, onBack }) {
               className="w-full h-full rounded-full object-cover"
             />
           </button>
-
+          {/*Conversation name and online status*/}
           <div className="flex flex-col">
             <h1 className="dark:text-white text-md font-bold">
               {activeConversation.isGroup
@@ -50,44 +51,32 @@ function ChatHeader({ online, callUser, onBack }) {
             </span>
           </div>
         </div>
-
-        {/* Right - Ações */}
+        {/*Right*/}
         <ul className="flex items-center gap-x-2.5">
-          {/* <li onClick={() => callUser()}>
-            <button className="btn">
-              <VideoCallIcon />
-            </button>
-          </li> */}
-          {/* <li>
-            <button className="btn">
-              <CallIcon />
-            </button>
-          </li> */}
-          {/* <li>
+          {1 == 1 ? (
+            <li onClick={() => callUser()}>
+              <button className="btn">
+                <VideoCallIcon />
+              </button>
+            </li>
+          ) : null}
+          {1 == 1 ? (
+            <li>
+              <button className="btn">
+                <CallIcon />
+              </button>
+            </li>
+          ) : null}
+          <li>
             <button className="btn">
               <SearchLargeIcon className="dark:fill-dark_svg_1" />
             </button>
-          </li> */}
-          
-           {/* Botão Voltar DO LADO dos ícones */}
-          <li>
-            <button
-              className="btn"
-              onClick={() => onBack && onBack()}
-              title="Voltar"
-            >
-              <BackIcon className="dark:fill-dark_svg_1" />
-            </button>
           </li>
-
-          
           <li>
             <button className="btn">
               <DotsIcon className="dark:fill-dark_svg_1" />
             </button>
           </li>
-
-         
         </ul>
       </div>
     </div>
@@ -99,5 +88,4 @@ const ChatHeaderWithSocket = (props) => (
     {(socket) => <ChatHeader {...props} socket={socket} />}
   </SocketContext.Consumer>
 );
-
 export default ChatHeaderWithSocket;

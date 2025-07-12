@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   BrowserRouter as Router,
@@ -12,26 +12,11 @@ import SocketContext from "./context/SocketContext";
 import Home from "./pages/home";
 import Login from "./pages/login";
 import Register from "./pages/register";
-import EscolherPerfil from "./pages/escolherperfil";
-import RegisterUber from "./pages/registeruber";
-import Contrato from "./pages/contrato";
-import ConfirmarPagamento from "./pages/confirmarpagamento";
-import Success from "./pages/success";
-import Failure from "./pages/failure";
-import Pending from "./pages/pending";
-
 //socket io
 const socket = io(process.env.REACT_APP_API_ENDPOINT.split("/api/v1")[0]);
 
-function RedirectToStatic({ path }) {
-  useEffect(() => {
-    window.location.href = path;
-  }, [path]);
-
-  return null;
-}
-
 function App() {
+  //const [connected, setConnected] = useState(false);
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user);
   const { token } = user;
@@ -44,50 +29,10 @@ function App() {
             <Route
               exact
               path="/"
-              element={token ? <Home socket={socket} /> : <Navigate to="/login" />}
+              element={
+                token ? <Home socket={socket} /> : <Navigate to="/login" />
+              }
             />
-            <Route
-              exact
-              path="/escolherperfil"
-              element={!token ? <EscolherPerfil /> : <Navigate to="/" />}
-            />
-            <Route
-              exact
-              path="/register"
-              element={!token ? <Register /> : <Navigate to="/" />}
-            />
-            <Route
-              exact
-              path="/registeruber"
-              element={!token ? <RegisterUber /> : <Navigate to="/" />}
-            />
-            <Route
-              exact
-              path="/contrato"
-              element={!token ? <Contrato /> : <Navigate to="/" />}
-            />
-
-
-             {/**Rotas aqui direcionamento vindos do backend  */}
-             <Route
-              exact
-              path="/success"
-              element={!token ? <Success /> : <Navigate to="/" />}
-            />
-            {/**Rotas aqui direcionamento vindos do backend  */}
-             <Route
-              exact
-              path="/failure"
-              element={!token ? <Failure /> : <Navigate to="/" />}
-            />
-             {/**Rotas aqui direcionamento vindos do backend  */}
-             <Route
-              exact
-              path="/pending"
-              element={!token ? <Pending /> : <Navigate to="/" />}
-            />
-
-
             <Route
               exact
               path="/login"
@@ -95,23 +40,9 @@ function App() {
             />
             <Route
               exact
-              path="/confirmar-pagamento"
-              element={token ? <ConfirmarPagamento /> : <Navigate to="/login" />}
+              path="/register"
+              element={!token ? <Register /> : <Navigate to="/" />}
             />
-
-            {/* Rota para abrir o HTML estático em public/calculo_rota/index.html */}
-            <Route
-              exact
-              path="/calculo_rota"
-              element={<RedirectToStatic path="/calculo_rota/index.html" />}
-            />
-            {/* Rota para abrir o HTML estático em public/cardapios_digital/lanchonete */}
-            <Route
-              exact
-              path="/cardapio_online"
-              element={<RedirectToStatic path="/cardapio_digital/lanchonete/index.html" />}
-            />
-            
           </Routes>
         </Router>
       </SocketContext.Provider>
