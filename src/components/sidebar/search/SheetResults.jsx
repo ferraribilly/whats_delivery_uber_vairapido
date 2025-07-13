@@ -5,6 +5,12 @@ import "leaflet/dist/leaflet.css";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { MapPin, Clock, Map as MapIcon, History } from "lucide-react";
+import { io } from "socket.io-client";
+const markerIcon = "/assets/markers/marker.png";
+const selectedMarkerIcon = "/assets/markers/selected-marker.png";
+const startIcon = "/assets/markers/start.png";
+
+
 
 export default function SheetResults({ sheetResults, setSheetResults, setSidebarOpen }) {
   const [statusApiHtml, setStatusApiHtml] = useState("");
@@ -32,109 +38,140 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
   const draggingRef = useRef(false);
   const [formaPagamento, setFormaPagamento] = useState("");
 
-  // ÚNICO useEffect para criar o mapa com modo dark, em id "map"
-  useEffect(() => {
-    if (!mapRef.current) {
-      mapRef.current = L.map("map", {
-        zoomControl: true,
-        attributionControl: false,
-      }).setView([-15.78, -47.92], 13);
+   // Socket ref
+    const socketRef = useRef(null);
 
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
-        subdomains: "abcd",
-        maxZoom: 13,
-      }).addTo(mapRef.current);
+  useEffect(() => {
+  if (!mapRef.current) {
+    mapRef.current = L.map("map", {
+      zoomControl: true,
+      attributionControl: false,
+    }).setView([-15.78, -47.92], 19);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap",
+      maxZoom: 15,
+    }).addTo(mapRef.current);
+  }
+}, []);
+
+useEffect(() => {
+  socketRef.current = io(apiURL);
+
+  socketRef.current.on("connect", () => {
+    console.log("Socket conectado, id:", socketRef.current.id);
+  });
+
+  socketRef.current.on("updateMotoristasLocalizacao", (motoristas) => {
+    setSheetResults(motoristas);
+  });
+
+  socketRef.current.on("disconnect", () => {
+    console.log("Socket desconectado");
+  });
+
+  return () => {
+    if (socketRef.current) {
+      socketRef.current.disconnect();
     }
-  }, []);
+  };
+}, [apiURL, setSheetResults]);
 
-  useEffect(() => {
-    if (!mapRef.current) return;
+useEffect(() => {
+  if (!mapRef.current) return;
 
-    // Remove marcadores antigos
-    markers.forEach((m) => mapRef.current.removeLayer(m));
-    const novos = [];
+  markers.forEach((m) => mapRef.current.removeLayer(m));
+  const novos = [];
 
-    sheetResults?.forEach((pessoa) => {
-      const temUber = pessoa.tipoVeiculo;
+  sheetResults?.forEach((contact) => {
+    const { tipoVeiculo, location, name, online, picture } = contact;
 
-      if (temUber && pessoa.location?.coordinates) {
-        const [lng, lat] = pessoa.location.coordinates;
-        const marker = L.marker([lat, lng])
-          .addTo(mapRef.current)
-          .bindPopup(
-            `<b>${pessoa.name || "Motorista"}</b><br/>Tipo: ${
-              pessoa.tipoVeiculo === "carro"
-                ? "Carro"
-                : pessoa.tipoVeiculo === "moto"
-                ? "Moto"
-                : "Entregador"
-            }`
-          );
-        novos.push(marker);
-      } else if (pessoa.location?.coordinates && pessoa.online === true) {
-        const [lng, lat] = pessoa.location.coordinates;
+    if (tipoVeiculo && location?.coordinates) {
+      const [lng, lat] = location.coordinates;
+
+  let iconUrl;
+if (tipoVeiculo === "carro") iconUrl = "/assets/markers/marker.png";
+else if (tipoVeiculo === "moto") iconUrl = "/assets/markers/selected-marker.png";
+else iconUrl = "/assets/markers/start.png";
+
+      const icon = L.icon({
+        iconUrl,
+        iconSize: [40, 40],
+        iconAnchor: [20, 40],
+        popupAnchor: [0, -40],
+      });
+
+      const marker = L.marker([lat, lng], { icon })
+        .addTo(mapRef.current)
+        .bindPopup(
+          `<b>${name || "Motorista"}</b><br/>Tipo: ${
+            tipoVeiculo.charAt(0).toUpperCase() + tipoVeiculo.slice(1)
+          }`
+        );
+      novos.push(marker);
+    } else if (location?.coordinates && online === true) {
+      const [lng, lat] = location.coordinates;
+      const icon = L.divIcon({
+        html: `<img src="${
+          picture ||
+          "https://res.cloudinary.com/dkd5jblv5/image/upload/v1675976806/Default_ProfilePicture_gjngnb.png"
+        }" class="leaflet-user-icon" width="40" height="40"/>`,
+        iconSize: [40, 40],
+        className: "",
+      });
+      const marker = L.marker([lat, lng], { icon })
+        .addTo(mapRef.current)
+        .bindPopup(`<b>${name || "Usuário"}</b>`);
+      novos.push(marker);
+    }
+  });
+
+  setMarkers(novos);
+}, [sheetResults]);
+
+useEffect(() => {
+  if (!mapRef.current) return;
+  if (!navigator.geolocation) {
+    alert("Geolocalização não suportada pelo navegador.");
+    return;
+  }
+
+  const watchId = navigator.geolocation.watchPosition(
+    (position) => {
+      const { latitude, longitude } = position.coords;
+      if (userMarkerRef.current) {
+        userMarkerRef.current.setLatLng([latitude, longitude]);
+      } else {
         const icon = L.divIcon({
-          html: `<img src="${
-            pessoa.picture ||
-            "https://res.cloudinary.com/dkd5jblv5/image/upload/v1675976806/Default_ProfilePicture_gjngnb.png"
-          }" class="leaflet-user-icon" width="40" height="40"/>`,
+          html: `<div style="width:40px; height:40px; border-radius:50%; overflow:hidden; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.3); animation: pulse 2s infinite;">
+            <img src="${
+              user?.picture ||
+              "https://res.cloudinary.com/dkd5jblv5/image/upload/v1675976806/Default_ProfilePicture_gjngnb.png"
+            }" style="width:40px; height:40px; object-fit:cover;" />
+          </div>`,
           iconSize: [40, 40],
           className: "",
         });
-        const marker = L.marker([lat, lng], { icon }).addTo(mapRef.current).bindPopup(`<b>${pessoa.name || "Usuário"}</b>`);
-        novos.push(marker);
+        userMarkerRef.current = L.marker([latitude, longitude], { icon })
+          .addTo(mapRef.current)
+          .bindPopup("Você");
       }
-    });
+      if (!mapRef.current._userCentered) {
+        mapRef.current.setView([latitude, longitude], 19);
+        mapRef.current._userCentered = true;
+      }
+    },
+    (error) => {
+      console.error("Erro ao obter localização:", error);
+      alert("Não foi possível obter localização.");
+    },
+    { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+  );
 
-    setMarkers(novos);
-  }, [sheetResults]);
-
-  // Geolocalização do usuário no mapa
-  useEffect(() => {
-    if (!mapRef.current) return;
-    if (!navigator.geolocation) {
-      alert("Geolocalização não suportada pelo navegador.");
-      return;
-    }
-
-    const watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        if (userMarkerRef.current) {
-          userMarkerRef.current.setLatLng([latitude, longitude]);
-        } else {
-          const icon = L.divIcon({
-            html: `<div style="width:40px; height:40px; border-radius:50%; overflow:hidden; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.3); animation: pulse 2s infinite;">
-              <img src="${
-                user?.picture ||
-                "https://res.cloudinary.com/dkd5jblv5/image/upload/v1675976806/Default_ProfilePicture_gjngnb.png"
-              }" style="width:40px; height:40px; object-fit:cover;" />
-            </div>`,
-            iconSize: [40, 40],
-            className: "",
-          });
-          userMarkerRef.current = L.marker([latitude, longitude], { icon })
-            .addTo(mapRef.current)
-            .bindPopup("Você");
-        }
-        if (!mapRef.current._userCentered) {
-          mapRef.current.setView([latitude, longitude], 19);
-          mapRef.current._userCentered = true;
-        }
-      },
-      (error) => {
-        console.error("Erro ao obter localização:", error);
-        alert("Não foi possível obter localização.");
-      },
-      { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
-    );
-
-    return () => {
-      navigator.geolocation.clearWatch(watchId);
-    };
-  }, [user?.picture]);
+  return () => {
+    navigator.geolocation.clearWatch(watchId);
+  };
+}, [user?.picture]);
 
   const onDragStart = (e) => {
     draggingRef.current = true;
@@ -151,7 +188,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
     if (!draggingRef.current) return;
     const currentY = e.touches ? e.touches[0].clientY : e.clientY;
     const deltaY = startYRef.current - currentY;
-    const newHeight = Math.min(window.innerHeight, Math.max(200, startHeightRef.current + deltaY));
+    const newHeight = Math.min(window.innerHeight, Math.max(100, startHeightRef.current + deltaY));
     setSheetHeight(newHeight);
   };
 
@@ -173,16 +210,16 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
     };
   }, []);
 
-  useEffect(() => {
-    axios
-      .get(`${apiURL}`)
-      .then((res) => setStatusApiHtml(res.data))
-      .catch(() =>
-        setStatusApiHtml(
-          "<h1 style='color:red;text-align:center;'>API OFFLINE ❌</h1>"
-        )
-      );
-  }, [apiURL]);
+   useEffect(() => {
+    const mensagem = "Olá, tudo bem? Seja bem-vindo à Vai Rápido! Estamos abertos 12 horas por dia. É muito fácil e rápido — basta clicar no ícone abaixo e iniciar seu pedido e aqui é seguro, contamos com monitoramento em sistema tempo real whats app bussines Ferrari, aonde aqui é criptografia ponta a ponta.";
+
+    if ("speechSynthesis" in window) {
+      const utter = new SpeechSynthesisUtterance(mensagem);
+      utter.lang = "pt-BR";
+      speechSynthesis.speak(utter);
+    }
+  }, []);
+  
 
   useEffect(() => {
     const getCurrentLocation = async () => {
@@ -332,111 +369,104 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
   };
 
   const calcularDescontoHorario = (percentual) => {
-    const agora = new Date();
-    const minutos = agora.getMinutes();
-    return minutos < 30 || (minutos >= 30 && minutos < 60) ? percentual : 0;
+  const agora = new Date();
+  const minutos = agora.getMinutes();
+  return minutos < 30 || (minutos >= 30 && minutos < 60) ? percentual : 0;
+};
+
+const calcularPrecoDinamico = (contact) => {
+  if (!contact || distancia === null || duracao === null) return "-";
+
+  const {
+    precoPorKm = 2.0,
+    precoPorMinuto = 0,
+    taxaFixa = 0.2,
+    descontoHorario = 0,
+  } = contact.taxas || {};
+
+  let preco = precoPorKm * distancia + precoPorMinuto * duracao + taxaFixa;
+
+  const desconto = calcularDescontoHorario(descontoHorario);
+  if (desconto > 0) preco = preco * (1 - desconto);
+
+  return `R$ ${preco.toFixed(2)}`;
+};
+
+const calcularPrecoEntrega = (contact) => {
+  if (!contact || distancia === null || duracao === null) return "-";
+
+  const {
+    precoPorKm = 2.0,
+    precoPorMinuto = 0.08,
+    taxaFixa = 0.2,
+  } = contact.taxas || {};
+
+  const preco = precoPorKm * distancia + precoPorMinuto * duracao + taxaFixa;
+
+  return `R$ ${preco.toFixed(2)}`;
+};
+
+ // 🔁 Função handleEscolherMotorista completa e corrigida
+const handleEscolherMotorista = async (tipo, contact) => {
+  if (!formaPagamento) {
+    alert("Selecione uma forma de pagamento.");
+    return;
+  }
+
+  let valorFinal = "-";
+  if (tipo === "carro" || tipo === "moto") {
+    valorFinal = calcularPrecoDinamico(contact);
+  } else if (tipo === "entregador") {
+    valorFinal = calcularPrecoEntrega(contact);
+  }
+
+  const ENDPOINT =
+    process.env.REACT_APP_API_ENDPOINT || "http://localhost:5000/api/v1";
+
+  // 🔍 garante que temos o _id correto
+  const userRedux = user; // vindo do useSelector
+  const userStorage = JSON.parse(localStorage.getItem("user")) || {};
+  const userFinal = {
+    _id: userRedux?._id || userStorage?._id || "usuario-desconhecido",
+    name:
+      userRedux?.name ||
+      userRedux?.nome ||
+      userStorage?.name ||
+      userStorage?.nome ||
+      "Usuário Desconhecido",
+    email:
+      userRedux?.email || userStorage?.email || "email@desconhecido.com",
   };
 
-  const calcularPrecoCarro = () => {
-    if (distancia === null || duracao === null) return "-";
-    const precoPorKm = 2.0;
-    const precoPorMinuto = 0;
-    const taxaFixa = 0.2;
+  console.log("🧪 DEBUG - userFinal:", userFinal);
 
-    let preco = precoPorKm * distancia + precoPorMinuto * duracao + taxaFixa;
-
-    const desconto = calcularDescontoHorario(0.05);
-    if (desconto > 0) preco = preco * (1 - desconto);
-
-    return `R$ ${preco.toFixed(2)}`;
+  const dadosViagem = {
+    origem,
+    destino,
+    distancia,
+    duracao,
+    formaPagamento,
+    tipo,
+    valor: valorFinal,
+    userId: userFinal._id,
+    name: userFinal.name,
+    email: userFinal.email,
+    tipoVeiculo: tipo,
+    valorCorrida:
+      parseFloat(valorFinal.replace("R$ ", "").replace(",", ".")) || 0,
   };
 
-  const calcularPrecoMoto = () => {
-    if (distancia === null || duracao === null) return "-";
-    const precoPorKm = 2.0;
-    const precoPorMinuto = 0;
-    const taxaFixa = 0.2;
-
-    let preco = precoPorKm * distancia + precoPorMinuto * duracao + taxaFixa;
-
-    const desconto = calcularDescontoHorario(0.1);
-    if (desconto > 0) preco = preco * (1 - desconto);
-
-    return `R$ ${preco.toFixed(2)}`;
-  };
-
-  const calcularPrecoEntrega = () => {
-    if (distancia === null || duracao === null) return "-";
-    const precoPorKm = 2.0;
-    const precoPorMinuto = 0.08;
-    const taxaFixa = 0.2;
-
-    const preco = precoPorKm * distancia + precoPorMinuto * duracao + taxaFixa;
-
-    return `R$ ${preco.toFixed(2)}`;
-  };
-
-  // 🔁 Função handleEscolherMotorista completa e corrigida
-  const handleEscolherMotorista = async (tipo) => {
-    if (!formaPagamento) {
-      alert("Selecione uma forma de pagamento.");
-      return;
-    }
-
-    let valorFinal = "-";
-    if (tipo === "carro") valorFinal = calcularPrecoCarro();
-    else if (tipo === "moto") valorFinal = calcularPrecoMoto();
-    else if (tipo === "entregador") valorFinal = calcularPrecoEntrega();
-
-    const ENDPOINT = process.env.REACT_APP_API_ENDPOINT || "http://localhost:5000/api/v1";
-
-    // 🔍 garante que temos o _id correto
-    const userRedux = user; // vindo do useSelector
-    const userStorage = JSON.parse(localStorage.getItem("user")) || {};
-    const userFinal = {
-      _id: userRedux?._id || userStorage?._id || "usuario-desconhecido",
-      name:
-        userRedux?.name ||
-        userRedux?.nome ||
-        userStorage?.name ||
-        userStorage?.nome ||
-        "Usuário Desconhecido",
-      email:
-        userRedux?.email ||
-        userStorage?.email ||
-        "email@desconhecido.com",
-    };
-
-    console.log("🧪 DEBUG - userFinal:", userFinal);
-
-    const dadosViagem = {
-      origem,
-      destino,
-      distancia,
-      duracao,
-      formaPagamento,
-      tipo,
-      valor: valorFinal,
-      userId: userFinal._id,
-      name: userFinal.name,
-      email: userFinal.email,
-      tipoVeiculo: tipo,
-      valorCorrida:
-        parseFloat(valorFinal.replace("R$ ", "").replace(",", ".")) || 0,
-    };
-
-    try {
-      await axios.post(`${ENDPOINT}/orders`, dadosViagem);
-    } catch (error) {
-      console.error("Erro ao salvar viagem na backend", error);
-      alert("Erro ao salvar a viagem. Tente novamente.");
-      return;
-    }
-
+  try {
+    await axios.post(`${ENDPOINT}/orders`, dadosViagem);
     localStorage.setItem("viagem_atual", JSON.stringify(dadosViagem));
-    setSheetResults([]);
-    setSidebarOpen(false);
-  };
+    alert("✅ Pedido criado. Pode escolher o seu motorista e boa viagem.");
+  } catch (error) {
+    console.error("Erro ao salvar viagem na backend", error);
+    alert("Erro ao salvar a viagem. Tente novamente.");
+  }
+};
+
+
 
   return (
 
@@ -459,24 +489,24 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
       />
 
       <button
-        className="absolute top-5 right-400 z-[0] px-4 py-2 bg-transparent text-white rounded shadow"
-        onClick={() => setModoToqueAtivo(!modoToqueAtivo)}
+        className="absolute top-5 right-400 z-[0] px-4 py-2 bg- text-white rounded shadow"
+        // onClick={() => setModoToqueAtivo(!modoToqueAtivo)}
       >
-        {modoToqueAtivo ? "Desativar toque" : "Ativar toque"}
+        {modoToqueAtivo ? "" : ""}
       </button>
 
       <div
         ref={sheetRef}
         style={{
-          position: "absolute",
+          position: "fixed",
           bottom: 0,
           left: 0,
           right: 0,
           height: sheetHeight,
-          backgroundColor: "rgba(0, 0, 0, 1)",
+          backgroundColor: "rgba(1, 0, 0, 1)",
           borderTopLeftRadius: "30px",
           borderTopRightRadius: "30px",
-          boxShadow: "0 -2px 10px rgb(0, 0, 0), 0 0 15px rgba(0,0,0,0.05)",
+          boxShadow: "0 -2px 10px rgba(255, 255, 255, 1), 0 0 15px rgba(1, 14, 137, 1)",
           padding: "16px",
           zIndex: 60,
           display: "flex",
@@ -506,14 +536,18 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
           }}
         ></div>
           <ul>
-          {sheetResults && sheetResults.length > 0 ? (
-            sheetResults.map((user) => (
-              <Contact
-                key={user._id}
-                contact={user}
-                setSheetResults={setSheetResults}
-                setSidebarOpen={setSidebarOpen}
-              />
+         {sheetResults && sheetResults.length > 0 ? (
+          sheetResults.map((user) => (
+      <Contact
+  key={user._id}
+  contact={user}
+  setSheetResults={setSheetResults}
+  setSidebarOpen={setSidebarOpen} // ✅ Adiciona isso aqui
+  distancia={distancia}
+  duracao={duracao}
+  handleEscolherMotorista={handleEscolherMotorista}
+/>
+
             ))
           ) : (
             <li style={{ padding: "10px", color: "#666", textAlign: "center" }}>
@@ -553,7 +587,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
 
         {ultimoDestino && (
           <div className="mb-3">
-            <label className="block mb-1 text-gray-700 font-semibold">Último destino visitado:</label>
+            <label className="block mb-1 text-gold font-semibold">Último destino visitado:</label>
             <button
               onClick={preencherUltimoDestino}
               className="flex flex-col items-start justify-center gap-1 bg-yellow-300 text-gray-900 py-2 px-4 rounded-xl w-full hover:bg-yellow-400 transition text-left"
@@ -563,7 +597,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
                 <History className="w-5 h-5" />
                 <span className="font-semibold">Repetir último destino</span>
               </div>
-              <span className="text-sm text-gray-800 truncate">{ultimoDestino}</span>
+              <span className="text-sm text-black truncate">{ultimoDestino}</span>
             </button>
           </div>
         )}
@@ -581,7 +615,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
             
 
             {distancia !== null && duracao !== null && (
-              <div className="mt-6 flex flex-col items-center justify-center gap-3 text-gray-800">
+              <div className="mt-6 flex flex-col items-center justify-center gap-3 text-blue-600">
                 <div className="flex items-center gap-2 text-lg">
                   <MapPin className="w-5 h-5 text-blue-600" />
                   <span>
@@ -598,7 +632,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
 
                 {/* ==== ESCOLHA DE PAGAMENTO ==== */}
                 <div className="w-full mt-6 space-y-4">
-                  <strong className="block text-gray-800 text-lg">
+                  <strong className="block text-green-800 text-lg">
                     Escolha a forma de pagamento
                   </strong>
                   <div className="flex justify-between bg-white p-4 rounded-xl shadow-md">
@@ -627,7 +661,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
                         <img
                           src={`/assets/img/${img}`}
                           alt={label}
-                          className="w-16 h-16 object-contain"
+                          className="w-12 h-12 object-contain"
                         />
                         <span className="mt-2 text-sm text-gray-700">{label}</span>
                       </label>
@@ -650,7 +684,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
                           Pop
                         </strong>
                         <p className="text-green-700 font-semibold mt-2">
-                          Valor estimado: {calcularPrecoCarro()}
+                          Valor estimado:{calcularPrecoDinamico(user)}
                         </p>
                       </div>
                     </div>
@@ -673,7 +707,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
                       <div>
                         <strong className="block text-gray-800 text-lg">Motos</strong>
                         <p className="text-green-700 font-semibold mt-2">
-                          Valor estimado: {calcularPrecoMoto()}
+                        {calcularPrecoDinamico(user)}
                         </p>
                       </div>
                     </div>
@@ -698,7 +732,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
                           Entregas
                         </strong>
                         <p className="text-green-700 font-semibold mt-2">
-                          Valor estimado: {calcularPrecoEntrega()}
+                          Valor estimado:{calcularPrecoDinamico(user)}
                         </p>
                       </div>
                     </div>

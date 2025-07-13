@@ -5,6 +5,7 @@ import "leaflet/dist/leaflet.css";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { MapPin, Clock, Map as MapIcon, History } from "lucide-react";
+import { io } from "socket.io-client";
 
 export default function SheetResults({ sheetResults, setSheetResults, setSidebarOpen }) {
   const [statusApiHtml, setStatusApiHtml] = useState("");
@@ -25,6 +26,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
   const [modoToqueAtivo, setModoToqueAtivo] = useState(false);
   const [showOrigem, setShowOrigem] = useState(false);
 
+
   const [sheetHeight, setSheetHeight] = useState(() => window.innerHeight / 2);
   const sheetRef = useRef(null);
   const startYRef = useRef(0);
@@ -32,7 +34,10 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
   const draggingRef = useRef(false);
   const [formaPagamento, setFormaPagamento] = useState("");
 
-  // ÚNICO useEffect para criar o mapa com modo dark, em id "map"
+   // Socket ref
+  const socketRef = useRef(null);
+
+ // === Inicialização do mapa ===
   useEffect(() => {
     if (!mapRef.current) {
       mapRef.current = L.map("map", {
@@ -49,6 +54,32 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
     }
   }, []);
 
+  // === Conexão socket.io para acompanhar localização dos motoristas ===
+  useEffect(() => {
+    socketRef.current = io(apiURL);
+
+    socketRef.current.on("connect", () => {
+      console.log("Socket conectado, id:", socketRef.current.id);
+    });
+
+    // Evento para receber lista atualizada dos motoristas com localização
+    socketRef.current.on("updateMotoristasLocalizacao", (motoristas) => {
+      // motoristas: array de usuários com tipoVeiculo e location atualizados
+      setSheetResults(motoristas);
+    });
+
+    socketRef.current.on("disconnect", () => {
+      console.log("Socket desconectado");
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, [apiURL, setSheetResults]);
+
+  // Atualiza marcadores no mapa quando sheetResults mudar
   useEffect(() => {
     if (!mapRef.current) return;
 
@@ -91,7 +122,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
     setMarkers(novos);
   }, [sheetResults]);
 
-  // Geolocalização do usuário no mapa
+  // Geolocalização do usuário no mapa (mantém seu código original)
   useEffect(() => {
     if (!mapRef.current) return;
     if (!navigator.geolocation) {
@@ -135,6 +166,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
       navigator.geolocation.clearWatch(watchId);
     };
   }, [user?.picture]);
+
 
   const onDragStart = (e) => {
     draggingRef.current = true;

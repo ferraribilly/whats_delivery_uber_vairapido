@@ -1,12 +1,13 @@
 import axios from "axios";
-import { useState } from "react";
+import { useState, forwardRef, useImperativeHandle } from "react";
 import { useSelector } from "react-redux";
 import { FilterIcon, ReturnIcon, SearchIcon } from "../../../svg";
 
-export default function Search({ searchLength, setSheetResults }) {
+const Search = forwardRef(({ searchLength, setSheetResults }, ref) => {
   const { user } = useSelector((state) => state.user);
   const { token } = user;
   const [show, setShow] = useState(false);
+  const [resultados, setResultados] = useState([]);
 
   const handleSearch = async (e) => {
     if (e.target.value && e.key === "Enter") {
@@ -19,14 +20,26 @@ export default function Search({ searchLength, setSheetResults }) {
             },
           }
         );
+        setResultados(data);
         setSheetResults(data);
       } catch (error) {
         console.log(error?.response?.data?.error?.message || "Erro ao buscar usuários");
       }
     } else {
+      setResultados([]);
       setSheetResults([]);
     }
   };
+
+  // Expor função para uso externo (via ref)
+  useImperativeHandle(ref, () => ({
+    filtrarPorTipoVeiculo(tipo) {
+      const filtrados = resultados.filter(
+        (contato) => contato.tipoVeiculo === tipo
+      );
+      setSheetResults(filtrados);
+    },
+  }));
 
   return (
     <div className="h-[49px] py-1.5">
@@ -36,7 +49,10 @@ export default function Search({ searchLength, setSheetResults }) {
             {show || searchLength > 0 ? (
               <span
                 className="w-8 flex items-center justify-center rotateAnimation cursor-pointer"
-                onClick={() => setSheetResults([])}
+                onClick={() => {
+                  setResultados([]);
+                  setSheetResults([]);
+                }}
               >
                 <ReturnIcon className="fill-green_1 w-5" />
               </span>
@@ -47,7 +63,7 @@ export default function Search({ searchLength, setSheetResults }) {
             )}
             <input
               type="text"
-              placeholder="Search or start a new chat"
+              placeholder="Para onde vamos hoje?"
               className="input"
               onFocus={() => setShow(true)}
               onBlur={() => searchLength === 0 && setShow(false)}
@@ -61,4 +77,6 @@ export default function Search({ searchLength, setSheetResults }) {
       </div>
     </div>
   );
-}
+});
+
+export default Search;
