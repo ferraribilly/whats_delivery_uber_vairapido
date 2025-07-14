@@ -11,7 +11,7 @@ export default function Sidebar({ onlineUsers, typing }) {
   if (!isOpen) return null;
 
   return (
-    <div className="w-full h-full select-none bg-dark_bg_2 fixed top-0 left-0 z-50 scrollbar overflow-hidden">
+    <div className="w-full h-full select-none bg-white fixed top-0 left-0 z-50 scrollbar overflow-hidden">
       <SidebarHeader />
       <Notifications />
       <Search

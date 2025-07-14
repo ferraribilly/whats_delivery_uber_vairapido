@@ -32,7 +32,9 @@ const Search = forwardRef(({ searchLength, setSheetResults }, ref) => {
       setResultados(data);
       setSheetResults(data);
     } catch (error) {
-      console.log(error?.response?.data?.error?.message || "Erro ao buscar usuários");
+      console.log(
+        error?.response?.data?.error?.message || "Erro ao buscar usuários"
+      );
     }
   };
 
@@ -55,7 +57,7 @@ const Search = forwardRef(({ searchLength, setSheetResults }, ref) => {
       <div className="px-[50px]">
         <div className="flex items-center gap-x-3">
           <div className="w-full flex dark:bg-dark_bg_2 rounded-lg pl-2">
-            {show || searchLength > 0 ? (
+            {show || searchLength > 1 ? (
               <span
                 className="w-62 flex items-center justify-center rotateAnimation cursor-pointer"
                 onClick={() => {
@@ -66,75 +68,60 @@ const Search = forwardRef(({ searchLength, setSheetResults }, ref) => {
                 <ReturnIcon className="fill-green_1 w-12" />
               </span>
             ) : (
-               <div>
-              </div>
+              <div></div>
             )}
-            
           </div>
-          
         </div>
       </div>
-        {/* ==== CARDS ESCOLHER carro ==== */}
-      <div className="w-auto mt-6 space-y-4"
-      onClick={() => buscarPorTipoVeiculo("carro")}
+
+      {/* ==== CARDS ESCOLHER CARRO ==== */}
+      <div
+        className="w-auto mt-6 space-y-4 "
+        onClick={() => buscarPorTipoVeiculo("carro")} // está certo aqui
       >
-        {/* Carros */}
         <div className="flex items-center justify-between bg-dark p-4 rounded-xl shadow-md">
           <div className="flex items-center gap-4">
             <img
-              src="/assets/img/entregadores.png"
+              src="/assets/img/UberX.png"
               alt="Carro"
               className="w-16 h-16"
-              
             />
-            <p className="text-green-700 font-semibold mt-2">
-              Entregas
-            
-            </p>
+            <h2 className="text-gold font-bold mt-2">VAI DE CARRO ##</h2>
           </div>
-        
         </div>
       </div>
-        {/* ==== CARDS ESCOLHER MOTO ==== */}
-      <div className="w-auto mt-6 space-y-4">
-        {/* Carros */}
-        <div className="flex items-center justify-between bg-dark p-4 rounded-xl shadow-md"
+
+      {/* ==== CARDS ESCOLHER MOTO ==== */}
+      <div
+        className="w-auto mt-6 space-y-4"
         onClick={() => buscarPorTipoVeiculo("moto")}
-        >
+      >
+        <div className="flex items-center justify-between bg-dark p-4 rounded-xl shadow-md">
           <div className="flex items-center gap-4">
             <img
-              src="/assets/img/entregadores.png"
-              alt="Carro"
+              src="/assets/img/moto.png"
+              alt="Moto"
               className="w-16 h-16"
-              onClick={() => buscarPorTipoVeiculo("moto")}
             />
-            <p className="text-green-700 font-semibold mt-2">
-              Vai de moto # 
-            
-            </p>
+            <h2 className="text-blue-700 font-bold mt-2">VAI DE MOTO ##</h2>
           </div>
-        
         </div>
       </div>
-        {/* ==== CARDS ESCOLHER Enttrgadores ==== */}
-      <div className="w-auto mt-6 space-y-4"
-       onClick={() => buscarPorTipoVeiculo("entregadores")}
+
+      {/* ==== CARDS ESCOLHER ENTREGADORES ==== */}
+      <div
+        className="w-auto mt-6 space-y-4"
+        onClick={() => buscarPorTipoVeiculo("entregador")} 
       >
-        {/* Carros */}
         <div className="flex items-center justify-between bg-dark p-4 rounded-xl shadow-md">
           <div className="flex items-center gap-4">
             <img
               src="/assets/img/entregadores.png"
-              alt="Carro"
+              alt="Entregador"
               className="w-16 h-16"
-             
             />
-            <p className="text-green-700 font-semibold mt-2">
-              Entregas
-            
-            </p>
+            <p className="text-green-700 font-bold mt-2">ENTREGAS ##</p>
           </div>
-        
         </div>
       </div>
     </div>
