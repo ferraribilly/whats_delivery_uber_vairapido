@@ -5,15 +5,30 @@ import "leaflet/dist/leaflet.css";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { MapPin, Clock, Map as MapIcon, History } from "lucide-react";
-import { io } from "socket.io-client";
+import { ReturnIcon } from "../../../svg";
+
+
+const pulseStyle = `
+.leaflet-user-icon {
+  animation: pulse 2s infinite;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0.01);
+}
+@keyframes pulse {
+  5% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 72, 197, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(34, 197, 94, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+`;
+
 const markerIcon = "/assets/markers/marker.png";
 const selectedMarkerIcon = "/assets/markers/selected-marker.png";
 const startIcon = "/assets/markers/start.png";
 
-
-
-export default function SheetResults({ sheetResults, setSheetResults, setSidebarOpen }) {
+export default function SheetResults({ sheetResults, setSheetResults, setSidebarOpen,setResultados, Search }) {
   const [statusApiHtml, setStatusApiHtml] = useState("");
+  
   const apiURL = process.env.REACT_APP_API_URL || "http://localhost:3005";
   const [markers, setMarkers] = useState([]);
   const mapRef = useRef(null);
@@ -30,6 +45,9 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
   const [ultimoDestino, setUltimoDestino] = useState("");
   const [modoToqueAtivo, setModoToqueAtivo] = useState(false);
   const [showOrigem, setShowOrigem] = useState(false);
+  const [show, setShow] = useState(false);
+  
+
 
   const [sheetHeight, setSheetHeight] = useState(() => window.innerHeight / 2);
   const sheetRef = useRef(null);
@@ -38,140 +56,103 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
   const draggingRef = useRef(false);
   const [formaPagamento, setFormaPagamento] = useState("");
 
-   // Socket ref
-    const socketRef = useRef(null);
+  useEffect(() => {
+    const styleEl = document.createElement("style");
+    styleEl.innerHTML = pulseStyle;
+    document.head.appendChild(styleEl);
+  }, []);
 
   useEffect(() => {
-  if (!mapRef.current) {
-    mapRef.current = L.map("map", {
-      zoomControl: true,
-      attributionControl: false,
-    }).setView([-15.78, -47.92], 19);
+    if (!mapRef.current) {
+      mapRef.current = L.map("map", {
+        zoomControl: true,
+        attributionControl: false,
+      }).setView([-15.78, -47.92], 19);
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "© OpenStreetMap",
-      maxZoom: 15,
-    }).addTo(mapRef.current);
-  }
-}, []);
-
-useEffect(() => {
-  socketRef.current = io(apiURL);
-
-  socketRef.current.on("connect", () => {
-    console.log("Socket conectado, id:", socketRef.current.id);
-  });
-
-  socketRef.current.on("updateMotoristasLocalizacao", (motoristas) => {
-    setSheetResults(motoristas);
-  });
-
-  socketRef.current.on("disconnect", () => {
-    console.log("Socket desconectado");
-  });
-
-  return () => {
-    if (socketRef.current) {
-      socketRef.current.disconnect();
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap",
+        maxZoom: 19,
+      }).addTo(mapRef.current);
     }
-  };
-}, [apiURL, setSheetResults]);
+  }, []);
+ useEffect(() => {
+    if (!mapRef.current) return;
 
-useEffect(() => {
-  if (!mapRef.current) return;
+    markers.forEach((m) => mapRef.current.removeLayer(m));
+    const novos = [];
 
-  markers.forEach((m) => mapRef.current.removeLayer(m));
-  const novos = [];
+    sheetResults?.forEach((pessoa) => {
+      const temUber = pessoa.tipoVeiculo  || pessoa.tipoVeiculo;
 
-  sheetResults?.forEach((contact) => {
-    const { tipoVeiculo, location, name, online, picture } = contact;
-
-    if (tipoVeiculo && location?.coordinates) {
-      const [lng, lat] = location.coordinates;
-
-  let iconUrl;
-if (tipoVeiculo === "carro") iconUrl = "/assets/markers/marker.png";
-else if (tipoVeiculo === "moto") iconUrl = "/assets/markers/selected-marker.png";
-else iconUrl = "/assets/markers/start.png";
-
-      const icon = L.icon({
-        iconUrl,
-        iconSize: [40, 40],
-        iconAnchor: [20, 40],
-        popupAnchor: [0, -40],
-      });
-
-      const marker = L.marker([lat, lng], { icon })
-        .addTo(mapRef.current)
-        .bindPopup(
-          `<b>${name || "Motorista"}</b><br/>Tipo: ${
-            tipoVeiculo.charAt(0).toUpperCase() + tipoVeiculo.slice(1)
-          }`
-        );
-      novos.push(marker);
-    } else if (location?.coordinates && online === true) {
-      const [lng, lat] = location.coordinates;
-      const icon = L.divIcon({
-        html: `<img src="${
-          picture ||
-          "https://res.cloudinary.com/dkd5jblv5/image/upload/v1675976806/Default_ProfilePicture_gjngnb.png"
-        }" class="leaflet-user-icon" width="40" height="40"/>`,
-        iconSize: [40, 40],
-        className: "",
-      });
-      const marker = L.marker([lat, lng], { icon })
-        .addTo(mapRef.current)
-        .bindPopup(`<b>${name || "Usuário"}</b>`);
-      novos.push(marker);
-    }
-  });
-
-  setMarkers(novos);
-}, [sheetResults]);
-
-useEffect(() => {
-  if (!mapRef.current) return;
-  if (!navigator.geolocation) {
-    alert("Geolocalização não suportada pelo navegador.");
-    return;
-  }
-
-  const watchId = navigator.geolocation.watchPosition(
-    (position) => {
-      const { latitude, longitude } = position.coords;
-      if (userMarkerRef.current) {
-        userMarkerRef.current.setLatLng([latitude, longitude]);
-      } else {
+      if (temUber && pessoa.location?.coordinates) {
+        const [lng, lat] = pessoa.location.coordinates;
+        const marker = L.marker([lat, lng])
+          .addTo(mapRef.current)
+          .bindPopup(
+            `<b>${pessoa.name || "Motorista"}</b><br/>Tipo: ${
+              pessoa.tipoVeiculo ? "Carro" : pessoa.tipoVeiculo ? "Moto" : "Entregador"
+            }`
+          );
+        novos.push(marker);
+      } else if (pessoa.location?.coordinates && pessoa.online === true) {
+        const [lng, lat] = pessoa.location.coordinates;
         const icon = L.divIcon({
-          html: `<div style="width:40px; height:40px; border-radius:50%; overflow:hidden; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.3); animation: pulse 2s infinite;">
-            <img src="${
-              user?.picture ||
-              "https://res.cloudinary.com/dkd5jblv5/image/upload/v1675976806/Default_ProfilePicture_gjngnb.png"
-            }" style="width:40px; height:40px; object-fit:cover;" />
-          </div>`,
+          html: `<img src="${
+            pessoa.picture ||
+            "https://res.cloudinary.com/dkd5jblv5/image/upload/v1675976806/Default_ProfilePicture_gjngnb.png"
+          }" class="leaflet-user-icon" width="40" height="40"/>`,
           iconSize: [40, 40],
           className: "",
         });
-        userMarkerRef.current = L.marker([latitude, longitude], { icon })
-          .addTo(mapRef.current)
-          .bindPopup("Você");
+        const marker = L.marker([lat, lng], { icon }).addTo(mapRef.current).bindPopup(`<b>${pessoa.name || "Usuário"}</b>`);
+        novos.push(marker);
       }
-      if (!mapRef.current._userCentered) {
-        mapRef.current.setView([latitude, longitude], 19);
-        mapRef.current._userCentered = true;
-      }
-    },
-    (error) => {
-      console.error("Erro ao obter localização:", error);
-      alert("Não foi possível obter localização.");
-    },
-    { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
-  );
+    });
 
-  return () => {
-    navigator.geolocation.clearWatch(watchId);
-  };
-}, [user?.picture]);
+    setMarkers(novos);
+  }, [sheetResults]);
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+    if (!navigator.geolocation) {
+      alert("Geolocalização não suportada pelo navegador.");
+      return;
+    }
+
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        if (userMarkerRef.current) {
+          userMarkerRef.current.setLatLng([latitude, longitude]);
+        } else {
+          const icon = L.divIcon({
+            html: `<div style="width:40px; height:40px; border-radius:50%; overflow:hidden; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.3); animation: pulse 2s infinite;">
+              <img src="${
+                user?.picture ||
+                "https://res.cloudinary.com/dkd5jblv5/image/upload/v1675976806/Default_ProfilePicture_gjngnb.png"
+              }" style="width:40px; height:40px; object-fit:cover;" />
+            </div>`,
+            iconSize: [40, 40],
+            className: "",
+          });
+          userMarkerRef.current = L.marker([latitude, longitude], { icon }).addTo(mapRef.current).bindPopup("Você");
+        }
+        if (!mapRef.current._userCentered) {
+          mapRef.current.setView([latitude, longitude], 19);
+          mapRef.current._userCentered = true;
+        }
+      },
+      (error) => {
+        console.error("Erro ao obter localização:", error);
+        alert("Não foi possível obter localização.");
+      },
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+    );
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, [user?.picture]);
 
   const onDragStart = (e) => {
     draggingRef.current = true;
@@ -210,7 +191,7 @@ useEffect(() => {
     };
   }, []);
 
-   useEffect(() => {
+  useEffect(() => {
     const mensagem = "Olá, tudo bem? Seja bem-vindo à Vai Rápido! Estamos abertos 12 horas por dia. É muito fácil e rápido — basta clicar no ícone abaixo e iniciar seu pedido e aqui é seguro, contamos com monitoramento em sistema tempo real whats app bussines Ferrari, aonde aqui é criptografia ponta a ponta.";
 
     if ("speechSynthesis" in window) {
@@ -219,7 +200,6 @@ useEffect(() => {
       speechSynthesis.speak(utter);
     }
   }, []);
-  
 
   useEffect(() => {
     const getCurrentLocation = async () => {
@@ -300,7 +280,7 @@ useEffect(() => {
 
       rotaLayerRef.current = L.polyline(linha, {
         color: "blue",
-        weight: 5,
+        weight: 10,
         opacity: 0.8,
       }).addTo(mapRef.current);
 
@@ -369,102 +349,99 @@ useEffect(() => {
   };
 
   const calcularDescontoHorario = (percentual) => {
-  const agora = new Date();
-  const minutos = agora.getMinutes();
-  return minutos < 30 || (minutos >= 30 && minutos < 60) ? percentual : 0;
-};
-
-const calcularPrecoDinamico = (contact) => {
-  if (!contact || distancia === null || duracao === null) return "-";
-
-  const {
-    precoPorKm = 2.0,
-    precoPorMinuto = 0,
-    taxaFixa = 0.2,
-    descontoHorario = 0,
-  } = contact.taxas || {};
-
-  let preco = precoPorKm * distancia + precoPorMinuto * duracao + taxaFixa;
-
-  const desconto = calcularDescontoHorario(descontoHorario);
-  if (desconto > 0) preco = preco * (1 - desconto);
-
-  return `R$ ${preco.toFixed(2)}`;
-};
-
-const calcularPrecoEntrega = (contact) => {
-  if (!contact || distancia === null || duracao === null) return "-";
-
-  const {
-    precoPorKm = 2.0,
-    precoPorMinuto = 0.08,
-    taxaFixa = 0.2,
-  } = contact.taxas || {};
-
-  const preco = precoPorKm * distancia + precoPorMinuto * duracao + taxaFixa;
-
-  return `R$ ${preco.toFixed(2)}`;
-};
-
- // 🔁 Função handleEscolherMotorista completa e corrigida
-const handleEscolherMotorista = async (tipo, contact) => {
-  if (!formaPagamento) {
-    alert("Selecione uma forma de pagamento.");
-    return;
-  }
-
-  let valorFinal = "-";
-  if (tipo === "carro" || tipo === "moto") {
-    valorFinal = calcularPrecoDinamico(contact);
-  } else if (tipo === "entregador") {
-    valorFinal = calcularPrecoEntrega(contact);
-  }
-
-  const ENDPOINT =
-    process.env.REACT_APP_API_ENDPOINT || "http://localhost:5000/api/v1";
-
-  // 🔍 garante que temos o _id correto
-  const userRedux = user; // vindo do useSelector
-  const userStorage = JSON.parse(localStorage.getItem("user")) || {};
-  const userFinal = {
-    _id: userRedux?._id || userStorage?._id || "usuario-desconhecido",
-    name:
-      userRedux?.name ||
-      userRedux?.nome ||
-      userStorage?.name ||
-      userStorage?.nome ||
-      "Usuário Desconhecido",
-    email:
-      userRedux?.email || userStorage?.email || "email@desconhecido.com",
+    const agora = new Date();
+    const minutos = agora.getMinutes();
+    return minutos < 30 || (minutos >= 30 && minutos < 60) ? percentual : 0;
   };
 
-  console.log("🧪 DEBUG - userFinal:", userFinal);
+  const calcularPrecoDinamico = (contact) => {
+    if (!contact || distancia === null || duracao === null) return "-";
 
-  const dadosViagem = {
-    origem,
-    destino,
-    distancia,
-    duracao,
-    formaPagamento,
-    tipo,
-    valor: valorFinal,
-    userId: userFinal._id,
-    name: userFinal.name,
-    email: userFinal.email,
-    tipoVeiculo: tipo,
-    valorCorrida:
-      parseFloat(valorFinal.replace("R$ ", "").replace(",", ".")) || 0,
+    const {
+      precoPorKm = 2.0,
+      precoPorMinuto = 0,
+      taxaFixa = 0.2,
+      descontoHorario = 0,
+    } = contact.taxas || {};
+
+    let preco = precoPorKm * distancia + precoPorMinuto * duracao + taxaFixa;
+
+    const desconto = calcularDescontoHorario(descontoHorario);
+    if (desconto > 0) preco = preco * (1 - desconto);
+
+    return `R$ ${preco.toFixed(2)}`;
   };
 
-  try {
-    await axios.post(`${ENDPOINT}/orders`, dadosViagem);
-    localStorage.setItem("viagem_atual", JSON.stringify(dadosViagem));
-    alert("✅ Pedido criado. Pode escolher o seu motorista e boa viagem.");
-  } catch (error) {
-    console.error("Erro ao salvar viagem na backend", error);
-    alert("Erro ao salvar a viagem. Tente novamente.");
-  }
-};
+  const calcularPrecoEntrega = (contact) => {
+    if (!contact || distancia === null || duracao === null) return "-";
+
+    const {
+      precoPorKm = 2.0,
+      precoPorMinuto = 0.08,
+      taxaFixa = 0.2,
+    } = contact.taxas || {};
+
+    const preco = precoPorKm * distancia + precoPorMinuto * duracao + taxaFixa;
+
+    return `R$ ${preco.toFixed(2)}`;
+  };
+
+  const handleEscolherMotorista = async (tipo, contact) => {
+    if (!formaPagamento) {
+      alert("Selecione uma forma de pagamento.");
+      return;
+    }
+
+    let valorFinal = "-";
+    if (tipo === "carro" || tipo === "moto") {
+      valorFinal = calcularPrecoDinamico(contact);
+    } else if (tipo === "entregador") {
+      valorFinal = calcularPrecoEntrega(contact);
+    }
+
+    const ENDPOINT =
+      process.env.REACT_APP_API_ENDPOINT || "http://localhost:5000/api/v1";
+
+    const userRedux = user;
+    const userStorage = JSON.parse(localStorage.getItem("user")) || {};
+    const userFinal = {
+      _id: userRedux?._id || userStorage?._id || "usuario-desconhecido",
+      name:
+        userRedux?.name ||
+        userRedux?.nome ||
+        userStorage?.name ||
+        userStorage?.nome ||
+        "Usuário Desconhecido",
+      email:
+        userRedux?.email || userStorage?.email || "email@desconhecido.com",
+    };
+
+    const dadosViagem = {
+      origem,
+      destino,
+      distancia,
+      duracao,
+      formaPagamento,
+      tipo,
+      valor: valorFinal,
+      userId: userFinal._id,
+      name: userFinal.name,
+      email: userFinal.email,
+      tipoVeiculo: tipo,
+      valorCorrida:
+        parseFloat(valorFinal.replace("R$ ", "").replace(",", ".")) || 0,
+         motoristaId: contact._id, 
+    };
+
+    try {
+      await axios.post(`${ENDPOINT}/orders`, dadosViagem);
+      localStorage.setItem("viagem_atual", JSON.stringify(dadosViagem));
+      alert("✅ Pedido criado. Pode escolher o seu motorista e boa viagem.");
+    } catch (error) {
+      console.error("Erro ao salvar viagem na backend", error);
+      alert("Erro ao salvar a viagem. Tente novamente.");
+    }
+  };
 
 
 
@@ -473,15 +450,8 @@ const handleEscolherMotorista = async (tipo, contact) => {
     <div className="relative h-screen w-full z-40 overflow-hidden">
       <div id="map" className="absolute top-0 left-0 w-full h-full z-0"></div>
 
-      <div className="relative z-10 p-2">
-        <button
-         
-          className="absolute top-0 right-10 text-gray-600 hover:text-gray-900 transition p-2 rounded-full bg-gray-200 hover:bg-gray-300"
-          aria-label="Fechar mapa"
-        >
-        
-        </button>
-      </div>
+    
+      
 
       <div
         className="absolute top-4 left-4 z-[999] bg-white/80 px-4 py-2 rounded shadow-md max-w-xs"
@@ -503,18 +473,18 @@ const handleEscolherMotorista = async (tipo, contact) => {
           left: 0,
           right: 0,
           height: sheetHeight,
-          backgroundColor: "rgba(1, 0, 0, 1)",
+          backgroundColor: "bg-dark_bg_1 ",
           borderTopLeftRadius: "30px",
           borderTopRightRadius: "30px",
-          boxShadow: "0 -2px 10px rgba(255, 255, 255, 1), 0 0 15px rgba(1, 14, 137, 1)",
+          boxShadow: "0 -2px 10px rgba(0, 0, 0, 1), 0 0 15px rgba(1, 14, 137, 1)",
           padding: "16px",
           zIndex: 60,
           display: "flex",
           flexDirection: "column",
           overflowY: "auto",
           transition: "height 0.3s ease",
-          backdropFilter: "blur(8px)",
-          WebkitBackdropFilter: "blur(8px)",
+          backdropFilter: "blur(1px)",
+          WebkitBackdropFilter: "blur(1px)",
         }}
         onMouseDown={onDragStart}
         onTouchStart={onDragStart}
@@ -535,27 +505,7 @@ const handleEscolherMotorista = async (tipo, contact) => {
             cursor: "grab",
           }}
         ></div>
-          <ul>
-         {sheetResults && sheetResults.length > 0 ? (
-          sheetResults.map((user) => (
-      <Contact
-  key={user._id}
-  contact={user}
-  setSheetResults={setSheetResults}
-  setSidebarOpen={setSidebarOpen} // ✅ Adiciona isso aqui
-  distancia={distancia}
-  duracao={duracao}
-  handleEscolherMotorista={handleEscolherMotorista}
-/>
-
-            ))
-          ) : (
-            <li style={{ padding: "10px", color: "#666", textAlign: "center" }}>
-              Nenhum resultado para mostrar
-            </li>
-          )}
-        </ul>
-
+        
         <h2 className="text-xl font-bold mb-4 text-green-500 text-center">Pra onde vamos hoje!</h2>
         <h2 className="text-x font-bold mb-4 text-blue-500 text-center">{user.name}</h2>
         
@@ -567,7 +517,7 @@ const handleEscolherMotorista = async (tipo, contact) => {
               value={origem}
               onChange={(e) => setOrigem(e.target.value)}
               placeholder="Meu Local"
-              className="border border-gray-300 rounded-full p-2 pl-10 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="border border-gray-300 rounded-full p-2 pl-10 w-full focus:outline-none focus:ring-2 focus:ring-green-500 "
             />
             <MapIcon className="absolute left-3 top-2.5 text-green-500 animate-bounce" size={20} />
           </div>
@@ -587,7 +537,7 @@ const handleEscolherMotorista = async (tipo, contact) => {
 
         {ultimoDestino && (
           <div className="mb-3">
-            <label className="block mb-1 text-gold font-semibold">Último destino visitado:</label>
+            <label className="block mb-1 text-black font-semibold">Usar ultimo destino:</label>
             <button
               onClick={preencherUltimoDestino}
               className="flex flex-col items-start justify-center gap-1 bg-yellow-300 text-gray-900 py-2 px-4 rounded-xl w-full hover:bg-yellow-400 transition text-left"
@@ -611,6 +561,7 @@ const handleEscolherMotorista = async (tipo, contact) => {
               Calcular Valor
             </button>
            
+           
 
             
 
@@ -630,7 +581,7 @@ const handleEscolherMotorista = async (tipo, contact) => {
                 </div>
                 
 
-                {/* ==== ESCOLHA DE PAGAMENTO ==== */}
+                {/* ==== ESCOLHA DE PAGAMENTO ====
                 <div className="w-full mt-6 space-y-4">
                   <strong className="block text-green-800 text-lg">
                     Escolha a forma de pagamento
@@ -667,12 +618,12 @@ const handleEscolherMotorista = async (tipo, contact) => {
                       </label>
                     ))}
                   </div>
-                </div>
+                </div> */}
 
                 {/* ==== CARDS ESCOLHER VEÍCULO ==== */}
                 <div className="w-full mt-6 space-y-4">
                   {/* Carros */}
-                  <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-md">
+                  {/* <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-md">
                     <div className="flex items-center gap-4">
                       <img
                         src="/assets/img/UberX.png"
@@ -694,9 +645,9 @@ const handleEscolherMotorista = async (tipo, contact) => {
                     >
                       Selecionar
                     </button>
-                  </div>
+                  </div> */}
 
-                  {/* Motos */}
+                  {/* Motos
                   <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-md">
                     <div className="flex items-center gap-4">
                       <img
@@ -717,9 +668,9 @@ const handleEscolherMotorista = async (tipo, contact) => {
                     >
                       Selecionar
                     </button>
-                  </div>
+                  </div> */}
 
-                  {/* Entregadores */}
+                  {/* Entregadores
                   <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-md">
                     <div className="flex items-center gap-4">
                       <img
@@ -742,7 +693,36 @@ const handleEscolherMotorista = async (tipo, contact) => {
                     >
                       Selecionar
                     </button>
-                  </div>
+                  </div> */}
+                  
+                  
+                    <ul>
+                      {sheetResults && sheetResults.length > 0 ? (
+                      sheetResults.map((user, tipoVeiculo) => (
+                      <Contact
+                      key={user._id}
+                      contact={user}
+                      tipo={user._tipoVeiculo}
+                      formaPagamento={formaPagamento}
+                      setSheetResults={setSheetResults}
+                      setSidebarOpen={setSidebarOpen} 
+                      distancia={distancia}
+                      duracao={duracao}
+                      handleEscolherMotorista={handleEscolherMotorista}
+                      
+                      />
+                      
+
+                     ))
+                      ) : (
+                      <li style={{ padding: "10px", color: "#666", textAlign: "center" }}>
+                       Nenhum resultado para mostrar
+                       
+                      </li>
+                      
+                    )}
+                     </ul>
+
                 </div>
               </div>
             )}

@@ -608,6 +608,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
             >
               Calcular Valor
             </button>
+            
            
 
             
