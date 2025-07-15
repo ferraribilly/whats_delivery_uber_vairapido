@@ -17,7 +17,7 @@ function Contact({
 }) {
   const [tempoRestante, setTempoRestante] = useState(null);
   const [mostrarReacao, setMostrarReacao] = useState(false);
-  const [formaPagamento, setFormaPagamento] = useState(""); // <- agora aqui dentro
+  const [formaPagamento, setFormaPagamento] = useState("");
   const intervalRef = useRef(null);
   const audioRef = useRef(null);
 
@@ -29,6 +29,7 @@ function Contact({
     receiver_id: contact._id,
     token,
   };
+
   const openConversation = async () => {
     const newConvo = await dispatch(open_create_conversation(values));
     if (newConvo?.payload?._id) {
@@ -58,8 +59,6 @@ function Contact({
     return `R$ ${preco.toFixed(2)}`;
   };
 
-  
-
   const iniciarContagemRegressiva = () => {
     setTempoRestante(120);
     setMostrarReacao(false);
@@ -76,27 +75,6 @@ function Contact({
       });
     }, 1000);
   };
-
-  // const pararTudo = () => {
-  //   clearInterval(intervalRef.current);
-  //   audioRef.current?.pause();
-  //   audioRef.current.currentTime = 0;
-  // };
-
-  // const handleSim = () => {
-  //   pararTudo();
-  //   iniciarContagemRegressiva();
-  // };
-
-  // const handleNao = () => {
-  //   pararTudo();
-  //   setTempoRestante(null);
-  //   setMostrarReacao(false);
-  // };
-
-  // useEffect(() => {
-  //   return () => pararTudo();
-  // }, []);
 
   const handleEscolherMotorista = async (tipo, contact) => {
     if (!formaPagamento) {
@@ -123,7 +101,7 @@ function Contact({
         user.email || userStorage?.email || "email@desconhecido.com",
     };
 
-     const dadosViagem = {
+    const dadosViagem = {
       origem,
       destino,
       distancia,
@@ -134,10 +112,10 @@ function Contact({
       userId: userFinal._id,
       name: userFinal.name,
       email: userFinal.email,
-      tipoVeiculo: tipo,
+      tipoVeiculo: tipo.toLowerCase(),
       valorCorrida:
         parseFloat(valorFinal.replace("R$ ", "").replace(",", ".")) || 0,
-         motoristaId: contact._id, 
+      motoristaId: contact._id,
     };
 
     try {
@@ -154,19 +132,17 @@ function Contact({
   const formatarTempo = (s) =>
     `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
-  return (
-    <li className="list-none h-auto cursor-pointer px-[10px]">
-   <div className="relative flex flex-col items-center py-10 gap-2 backdropFilter-blur(1px) boxShadow-gold-600 WebkitBackdropFilter-blur(1px) border-[5px] text-black rounded-md shadow-md mt-10" style={{ boxShadow: '0 4px 6px -1px rgba(1, 1, 0, 0.95), 0 2px 4px -2px rgba(0, 0, 0, 1)' }}>
 
+  return (
+    <li className="list-none w-[100vw] h-auto cursor-pointer px-[10px]">
+      <div
+        className="relative flex flex-col items-center py-10 gap-2 backdropFilter-blur(1px) boxShadow-gold-600 WebkitBackdropFilter-blur(1px) border-[5px] text-black rounded-md shadow-md mt-10"
+        style={{ boxShadow: "0 4px 6px -1px rgba(1, 1, 0, 0.95), 0 2px 4px -2px rgba(0, 0, 0, 1)" }}
+      >
         <div className="absolute -top-0 w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-md bg-white">
-          <img
-            src={contact.picture}
-            alt="Foto"
-            className="w-full h-full object-cover"
-          />
+          <img src={contact.picture} alt="Foto" className="w-full h-full object-cover" />
         </div>
 
-        {/* NOME E ESTRELAS */}
         <div className="flex flex-col items-center mt-12 gap-1 w-full">
           <h1 className="font-bold text-lg dark:text-black">{contact.name}</h1>
           <div className="flex items-center gap-1 mb-1">
@@ -197,7 +173,6 @@ function Contact({
             Valor Corrida: {calcularPrecoDinamico()}
           </h1>
 
-          {/* === FORMA DE PAGAMENTO AQUI === */}
           <div className="w-full mt-4 px-4">
             <strong className="block text-green-800 text-md text-center mb-2">
               Escolha a forma de pagamento
@@ -218,11 +193,7 @@ function Contact({
                     onChange={(e) => setFormaPagamento(e.target.value)}
                     className="mb-2 accent-blue-600"
                   />
-                  <img
-                    src={`/assets/img/${img}`}
-                    alt={label}
-                    className="w-10 h-10 object-contain"
-                  />
+                  <img src={`/assets/img/${img}`} alt={label} className="w-10 h-10 object-contain" />
                   <span className="mt-1 text-xs text-gray-700">{label}</span>
                 </label>
               ))}
@@ -250,16 +221,10 @@ function Contact({
             <div className="flex flex-col items-center mt-4 gap-2">
               <span className="text-white font-semibold text-sm">Deseja tentar novamente?</span>
               <div className="flex gap-4">
-                <button
-                  // onClick={handleSim}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-                >
+                <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
                   Sim
                 </button>
-                <button
-                  // onClick={handleNao}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
-                >
+                <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
                   Não
                 </button>
               </div>
@@ -268,7 +233,7 @@ function Contact({
 
           <div className="flex gap-2 mt-2">
             <button
-              onClick={() => handleEscolherMotorista("carro", contact)}
+              onClick={() => handleEscolherMotorista(contact.tipoVeiculo, contact)}
               className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm shadow"
             >
               Solicitação

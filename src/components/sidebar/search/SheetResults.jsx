@@ -355,22 +355,30 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
   };
 
   const calcularPrecoDinamico = (contact) => {
-    if (!contact || distancia === null || duracao === null) return "-";
+  if (
+    !contact ||
+    origem === null ||
+    destino === null ||
+    contact.tipoVeiculo === null || 
+    distancia === null ||
+    duracao === null
+  ) return "-";
 
-    const {
-      precoPorKm = 2.0,
-      precoPorMinuto = 0,
-      taxaFixa = 0.2,
-      descontoHorario = 0,
-    } = contact.taxas || {};
+  const {
+    precoPorKm = 2.0,
+    precoPorMinuto = 0,
+    taxaFixa = 0.2,
+    descontoHorario = 0,
+  } = contact.taxas || {};
 
-    let preco = precoPorKm * distancia + precoPorMinuto * duracao + taxaFixa;
+  let preco = precoPorKm * distancia + precoPorMinuto * duracao + taxaFixa;
 
-    const desconto = calcularDescontoHorario(descontoHorario);
-    if (desconto > 0) preco = preco * (1 - desconto);
+  const desconto = calcularDescontoHorario(descontoHorario);
+  if (desconto > 0) preco = preco * (1 - desconto);
 
-    return `R$ ${preco.toFixed(2)}`;
-  };
+  return `R$ ${preco.toFixed(2)}`;
+};
+
 
   const calcularPrecoEntrega = (contact) => {
     if (!contact || distancia === null || duracao === null) return "-";
@@ -386,62 +394,65 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
     return `R$ ${preco.toFixed(2)}`;
   };
 
-  const handleEscolherMotorista = async (tipo, contact) => {
-    if (!formaPagamento) {
-      alert("Selecione uma forma de pagamento.");
-      return;
-    }
+const handleEscolherMotorista = async (contact, tipo) => {
+  if (!formaPagamento) {
+    alert("Selecione uma forma de pagamento.");
+    return;
+  }
 
-    let valorFinal = "-";
-    if (tipo === "carro" || tipo === "moto") {
-      valorFinal = calcularPrecoDinamico(contact);
-    } else if (tipo === "entregador") {
-      valorFinal = calcularPrecoEntrega(contact);
-    }
+  let valorFinal = "-";
+  if (tipo === "carro" || tipo === "moto") {
+    valorFinal = calcularPrecoDinamico(contact);
+  } else if (tipo === "entregador") {
+    valorFinal = calcularPrecoEntrega(contact);
+  }
 
-    const ENDPOINT =
-      process.env.REACT_APP_API_ENDPOINT || "http://localhost:5000/api/v1";
+  const ENDPOINT = process.env.REACT_APP_API_ENDPOINT || "http://localhost:5000/api/v1";
 
-    const userRedux = user;
-    const userStorage = JSON.parse(localStorage.getItem("user")) || {};
-    const userFinal = {
-      _id: userRedux?._id || userStorage?._id || "usuario-desconhecido",
-      name:
-        userRedux?.name ||
-        userRedux?.nome ||
-        userStorage?.name ||
-        userStorage?.nome ||
-        "Usuário Desconhecido",
-      email:
-        userRedux?.email || userStorage?.email || "email@desconhecido.com",
-    };
-
-    const dadosViagem = {
-      origem,
-      destino,
-      distancia,
-      duracao,
-      formaPagamento,
-      tipo,
-      valor: valorFinal,
-      userId: userFinal._id,
-      name: userFinal.name,
-      email: userFinal.email,
-      tipoVeiculo: tipo,
-      valorCorrida:
-        parseFloat(valorFinal.replace("R$ ", "").replace(",", ".")) || 0,
-         motoristaId: contact._id, 
-    };
-
-    try {
-      await axios.post(`${ENDPOINT}/orders`, dadosViagem);
-      localStorage.setItem("viagem_atual", JSON.stringify(dadosViagem));
-      alert("✅ Pedido criado. Pode escolher o seu motorista e boa viagem.");
-    } catch (error) {
-      console.error("Erro ao salvar viagem na backend", error);
-      alert("Erro ao salvar a viagem. Tente novamente.");
-    }
+  const userRedux = user;
+  const userStorage = JSON.parse(localStorage.getItem("user")) || {};
+  const userFinal = {
+    _id: userRedux?._id || userStorage?._id || "usuario-desconhecido",
+    name:
+      userRedux?.name ||
+      userRedux?.nome ||
+      userStorage?.name ||
+      userStorage?.nome ||
+      "Usuário Desconhecido",
+    email:
+      userRedux?.email ||
+      userStorage?.email ||
+      "email@desconhecido.com",
   };
+
+  const dadosViagem = {
+    origem,
+    destino,
+    distancia,
+    duracao,
+    formaPagamento,
+    tipo,
+    valor: valorFinal,
+    userId: userFinal._id,
+    name: userFinal.name,
+    email: userFinal.email,
+    tipoVeiculo: tipo.toLowerCase(),
+    valorCorrida:
+      parseFloat(valorFinal.replace("R$ ", "").replace(",", ".")) || 0,
+    motoristaId: contact._id,
+  };
+
+  try {
+    await axios.post(`${ENDPOINT}/orders`, dadosViagem);
+  } catch (error) {
+    console.error("Erro ao salvar viagem na backend", error);
+    alert("Erro ao salvar a viagem. Tente novamente.");
+    return;
+  }
+
+  localStorage.setItem("viagem_atual", JSON.stringify(dadosViagem));
+  setShow(false);
+};
 
 
 
@@ -581,150 +592,40 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
                 </div>
                 
 
-                {/* ==== ESCOLHA DE PAGAMENTO ====
-                <div className="w-full mt-6 space-y-4">
-                  <strong className="block text-green-800 text-lg">
-                    Escolha a forma de pagamento
-                  </strong>
-                  <div className="flex justify-between bg-white p-4 rounded-xl shadow-md">
-                    {[
-                      { valor: "pix", img: "pix.svg", label: "Pix" },
-                      {
-                        valor: "cartao",
-                        img: "cartao-de-credito-mercado-pago.webp",
-                        label: "Cartão Todas Bandeiras",
-                      },
-                      { valor: "dinheiro", img: "financa.png", label: "Dinheiro" },
-                      { valor: "maquininha", img: "maquina-de-cartao.png", label: "Maquininha" },
-                    ].map(({ valor, img, label }) => (
-                      <label
-                        key={valor}
-                        className="flex flex-col items-center cursor-pointer"
-                      >
-                        <input
-                          type="radio"
-                          name="formaPagamento"
-                          value={valor}
-                          checked={formaPagamento === valor}
-                          onChange={(e) => setFormaPagamento(e.target.value)}
-                          className="mb-2 accent-blue-600"
-                        />
-                        <img
-                          src={`/assets/img/${img}`}
-                          alt={label}
-                          className="w-12 h-12 object-contain"
-                        />
-                        <span className="mt-2 text-sm text-gray-700">{label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div> */}
-
-                {/* ==== CARDS ESCOLHER VEÍCULO ==== */}
-                <div className="w-full mt-6 space-y-4">
-                  {/* Carros */}
-                  {/* <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-md">
-                    <div className="flex items-center gap-4">
-                      <img
-                        src="/assets/img/UberX.png"
-                        alt="Carro"
-                        className="w-12 h-12"
-                      />
-                      <div>
-                        <strong className="block text-gray-800 text-lg">
-                          Pop
-                        </strong>
-                        <p className="text-green-700 font-semibold mt-2">
-                          Valor estimado:{calcularPrecoDinamico(user)}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleEscolherMotorista("carro")}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-                    >
-                      Selecionar
-                    </button>
-                  </div> */}
-
-                  {/* Motos
-                  <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-md">
-                    <div className="flex items-center gap-4">
-                      <img
-                        src="/assets/img/moto.png"
-                        alt="Moto"
-                        className="w-12 h-12"
-                      />
-                      <div>
-                        <strong className="block text-gray-800 text-lg">Motos</strong>
-                        <p className="text-green-700 font-semibold mt-2">
-                        {calcularPrecoDinamico(user)}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleEscolherMotorista("moto")}
-                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-                    >
-                      Selecionar
-                    </button>
-                  </div> */}
-
-                  {/* Entregadores
-                  <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-md">
-                    <div className="flex items-center gap-4">
-                      <img
-                        src="/assets/img/entregadores.png"
-                        alt="Entregadores"
-                        className="w-12 h-12"
-                      />
-                      <div>
-                        <strong className="block text-gray-800 text-lg">
-                          Entregas
-                        </strong>
-                        <p className="text-green-700 font-semibold mt-2">
-                          Valor estimado:{calcularPrecoDinamico(user)}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleEscolherMotorista("entregador")}
-                      className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600"
-                    >
-                      Selecionar
-                    </button>
-                  </div> */}
+              
                   
                   
-                    <ul>
-                      {sheetResults && sheetResults.length > 0 ? (
-                      sheetResults.map((user, tipoVeiculo) => (
-                      <Contact
-                      key={user._id}
-                      contact={user}
-                      tipo={user._tipoVeiculo}
-                      formaPagamento={formaPagamento}
-                      setSheetResults={setSheetResults}
-                      setSidebarOpen={setSidebarOpen} 
-                      distancia={distancia}
-                      duracao={duracao}
-                      handleEscolherMotorista={handleEscolherMotorista}
-                      
-                      />
-                      
-
-                     ))
-                      ) : (
-                      <li style={{ padding: "10px", color: "#666", textAlign: "center" }}>
-                       Nenhum resultado para mostrar
-                       
-                      </li>
-                      
-                    )}
-                     </ul>
+  <ul>
+  {sheetResults && sheetResults.length > 0 ? (
+    sheetResults.map((user) => (
+      <Contact
+        key={user._id}
+        contact={user}
+        tipoVeiculo={user._tipoVeiculo}
+        formaPagamento={formaPagamento}
+        setSheetResults={setSheetResults}
+        setSidebarOpen={setSidebarOpen}
+        distancia={distancia}
+        duracao={duracao}
+        origem={origem}
+        destino={destino}
+      />
+    ))
+  ) : (
+    <li
+      style={{
+        padding: "10px",
+        color: "#666",
+        textAlign: "center",
+      }}
+    >
+      Nenhum resultado para mostrar
+    </li>
+  )}
+</ul>
 
                 </div>
-              </div>
+      
             )}
           </>
         )}
