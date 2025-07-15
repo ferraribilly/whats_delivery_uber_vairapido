@@ -16,7 +16,7 @@ function Contact({
 }) {
   const [tempoRestante, setTempoRestante] = useState(null);
   const [mostrarReacao, setMostrarReacao] = useState(false);
-  const [formaPagamento, setFormaPagamento] = useState(""); // <- agora aqui dentro
+  const [formaPagamento, setFormaPagamento] = useState("");
   const intervalRef = useRef(null);
   const audioRef = useRef(null);
 
@@ -27,6 +27,15 @@ function Contact({
   const values = {
     receiver_id: contact._id,
     token,
+  };
+
+   const openConversation = async () => {
+    const newConvo = await dispatch(open_create_conversation(values));
+    if (newConvo?.payload?._id) {
+      socket.emit("join conversation", newConvo.payload._id);
+      setSheetResults([]);
+      setSidebarOpen(false);
+    }
   };
 
   const calcularPrecoDinamico = () => {
@@ -49,14 +58,7 @@ function Contact({
     return `R$ ${preco.toFixed(2)}`;
   };
 
-  const openConversation = async () => {
-    const newConvo = await dispatch(open_create_conversation(values));
-    if (newConvo?.payload?._id) {
-      socket.emit("join conversation", newConvo.payload._id);
-      setSheetResults([]);
-      setSidebarOpen?.(false);
-    }
-  };
+   
 
   const iniciarContagemRegressiva = () => {
     setTempoRestante(120);
@@ -75,26 +77,7 @@ function Contact({
     }, 1000);
   };
 
-  // const pararTudo = () => {
-  //   clearInterval(intervalRef.current);
-  //   audioRef.current?.pause();
-  //   audioRef.current.currentTime = 0;
-  // };
-
-  // const handleSim = () => {
-  //   pararTudo();
-  //   iniciarContagemRegressiva();
-  // };
-
-  // const handleNao = () => {
-  //   pararTudo();
-  //   setTempoRestante(null);
-  //   setMostrarReacao(false);
-  // };
-
-  // useEffect(() => {
-  //   return () => pararTudo();
-  // }, []);
+  
 
   const handleEscolherMotorista = async (tipo, contact) => {
     if (!formaPagamento) {
@@ -135,7 +118,6 @@ function Contact({
       tipoVeiculo: tipo,
       valorCorrida:
         parseFloat(valorFinal.replace("R$ ", "").replace(",", ".")) || 0,
-      motoristaId: contact._id,
     };
 
     try {
@@ -284,7 +266,7 @@ function Contact({
         </div>
       </div>
 
-      <audio ref={audioRef} src="../../../../audio/ringtone.mp3" />
+      <audio ref={audioRef} src="../../../../audio/car-warning-sound-189734.mp3" />
       <div className="ml-16 border-b dark:border-b-dark_border_1"></div>
     </li>
   );

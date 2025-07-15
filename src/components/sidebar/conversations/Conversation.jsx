@@ -84,6 +84,10 @@ function Conversation({ convo, socket, online, typing }) {
             {convo.latestMessage?.createdAt
               ? dateHandler(convo.latestMessage?.createdAt)
               : ""}
+              1 message nao lida
+          </span>
+            <span className="dark:text-dark_text_2">
+             ^ span para deletar
           </span>
         </div>
       </div>

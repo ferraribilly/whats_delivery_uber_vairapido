@@ -9,7 +9,8 @@ export default function Conversations({ onlineUsers, typing }) {
   const { user } = useSelector((state) => state.user);
   return (
     <div className="convos scrollbar">
-      <ul>
+      {/* <ul>
+
         {conversations &&
           conversations
             .filter(
@@ -29,7 +30,7 @@ export default function Conversations({ onlineUsers, typing }) {
                 />
               );
             })}
-      </ul>
+      </ul> */}
     </div>
   );
 }

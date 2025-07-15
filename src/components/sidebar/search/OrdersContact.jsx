@@ -113,7 +113,7 @@ function OrdersContact({ contact, setSheetResults, socket, setSidebarOpen, dista
 
 const ContactWithContext = (props) => (
   <SocketContext.Consumer>
-    {(socket) => <Contact {...props} socket={socket} />}
+    {/* {(socket) => <Contact {...props} socket={socket} />} */}
   </SocketContext.Consumer>
 );
 

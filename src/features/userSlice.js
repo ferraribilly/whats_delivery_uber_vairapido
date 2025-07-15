@@ -13,20 +13,6 @@ const initialState = {
     picture: "",
     status: "",
     token: "",
-
-    // campos opcionais com valor padrão vazio
-    tipoVeiculo: "",
-    marca: "",
-    cor: "",
-    placa: "",
-    chavePix: "",
-    precoPorKm: "",
-    precoPorMinuto: "",
-    taxaFixa: "",
-    descontoHorario: "",
-    fotoCNH: "",
-    fotoDocumentoVeiculo: "",
-    fotoQrCode: "",
   },
 };
 
@@ -71,92 +57,33 @@ export const userSlice = createSlice({
         picture: "",
         status: "",
         token: "",
-
-        tipoVeiculo: "",
-        marca: "",
-        cor: "",
-        placa: "",
-        chavePix: "",
-        precoPorKm: "",
-        precoPorMinuto: "",
-        taxaFixa: "",
-        descontoHorario: "",
-        fotoCNH: "",
-        fotoDocumentoVeiculo: "",
-        fotoQrCode: "",
       };
     },
     changeStatus: (state, action) => {
       state.status = action.payload;
     },
   },
- extraReducers(builder) {
+  extraReducers(builder) {
     builder
-      .addCase(registerUser.pending, (state) => {
+      .addCase(registerUser.pending, (state, action) => {
         state.status = "loading";
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.error = "";
-
-        const user = action.payload.user;
-
-        state.user = {
-          id: user.id || "",
-          name: user.name || "",
-          email: user.email || "",
-          picture: user.picture || "",
-          status: user.status || "",
-          token: user.token || "",
-
-          tipoVeiculo: user.tipoVeiculo || "",
-          marca: user.marca || "",
-          cor: user.cor || "",
-          placa: user.placa || "",
-          chavePix: user.chavePix || "",
-          precoPorKm: user.precoPorKm || "",
-          precoPorMinuto: user.precoPorMinuto || "",
-          taxaFixa: user.taxaFixa || "",
-          descontoHorario: user.descontoHorario || "",
-          fotoCNH: user.fotoCNH || "",
-          fotoDocumentoVeiculo: user.fotoDocumentoVeiculo || "",
-          fotoQrCode: user.fotoQrCode || "",
-        };
+        state.user = action.payload.user;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       })
-      .addCase(loginUser.pending, (state) => {
+      .addCase(loginUser.pending, (state, action) => {
         state.status = "loading";
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.error = "";
-
-        const user = action.payload.user;
-
-        state.user = {
-          id: user.id || "",
-          name: user.name || "",
-          email: user.email || "",
-          picture: user.picture || "",
-          status: user.status || "",
-          token: user.token || "",
-
-          tipoVeiculo: user.tipoVeiculo || "",
-          marca: user.marca || "",
-          cor: user.cor || "",
-          placa: user.placa || "",
-          chavePix: user.chavePix || "",
-          precoPorKm: user.precoPorKm || "",
-          precoPorMinuto: user.precoPorMinuto || "",
-          taxaFixa: user.taxaFixa || "",
-          descontoHorario: user.descontoHorario || "",
-          fotoCNH: user.fotoCNH || "",
-          fotoDocumentoVeiculo: user.fotoDocumentoVeiculo || "",
-          fotoQrCode: user.fotoQrCode || "",
-        };
+        state.user = action.payload.user;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.status = "failed";

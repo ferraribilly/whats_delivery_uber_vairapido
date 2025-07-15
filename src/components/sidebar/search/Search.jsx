@@ -1,131 +1,85 @@
 import axios from "axios";
-import { useState, forwardRef, useImperativeHandle } from "react";
+import { useState } from "react";
 import { useSelector } from "react-redux";
-import { FilterIcon, ReturnIcon, SearchIcon } from "../../../svg";
-import { Contact } from "lucide-react";
+import { FilterIcon, ReturnIcon, CommunityIcon } from "../../../svg";
 
-const Search = forwardRef(({ searchLength, setSheetResults }, ref) => {
+export default function Search({ searchLength, setSheetResults }) {
   const { user } = useSelector((state) => state.user);
   const { token } = user;
   const [show, setShow] = useState(false);
-  const [resultados, setResultados] = useState([]);
 
-  const handleSearch = async (e) => {
-    if (e.target.value && e.key === "Enter") {
-      buscarPorTermo(e.target.value);
-    } else if (e.key === "Enter") {
-      setResultados([]);
+  // Função para buscar por um termo (carro, moto, etc)
+  const buscar = async (termo) => {
+    if (termo) {
+      try {
+        const { data } = await axios.get(
+          `${process.env.REACT_APP_API_ENDPOINT}/user?search=${termo}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setSheetResults(data);
+      } catch (error) {
+        console.log(
+          error?.response?.data?.error?.message || "Erro ao buscar usuários"
+        );
+      }
+    } else {
       setSheetResults([]);
     }
   };
 
-  const buscarPorTermo = async (termo) => {
-    try {
-      const { data } = await axios.get(
-        `${process.env.REACT_APP_API_ENDPOINT}/user?search=${termo}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setResultados(data);
-      setSheetResults(data);
-    } catch (error) {
-      console.log(
-        error?.response?.data?.error?.message || "Erro ao buscar usuários"
-      );
+  // Função que será chamada ao pressionar "Enter" na barra de pesquisa
+  const handleSearch = async (e) => {
+    if (e.target.value && e.key === "Enter") {
+      await buscar(e.target.value);
     }
   };
 
-  useImperativeHandle(ref, () => ({
-    filtrarPorTipoVeiculo(tipo) {
-      buscarPorTermo(tipo);
-    },
-  }));
-
-  const buscarPorTipoVeiculo = async (tipo) => {
-    await buscarPorTermo(tipo);
-  };
-
-  const calcularPrecoDinamico = (user) => {
-    return "R$ 0,00"; // Placeholder
+  // Limpar resultados ao pressionar o botão de retorno
+  const clearSearch = () => {
+    setSheetResults([]);
   };
 
   return (
     <div className="h-[49px] py-1.5">
-      <div className="px-[50px]">
-        <div className="flex items-center gap-x-3">
-          <div className="w-full flex dark:bg-dark_bg_2 rounded-lg pl-2">
-            {show || searchLength > 1 ? (
+      <div className="px-[10px]">
+        <div className="flex items-center gap-x-2">
+          <div className="w-full flex dark:white rounded-lg pl-2">
+            {show || searchLength > 0 ? (
               <span
-                className="w-62 flex items-center justify-center rotateAnimation cursor-pointer"
-                onClick={() => {
-                  setResultados([]);
-                  setSheetResults([]);
-                }}
+                className="w-8 flex items-center justify-center rotateAnimation cursor-pointer"
+                onClick={clearSearch}
               >
-                <ReturnIcon className="fill-green_1 w-12" />
+                <ReturnIcon className="fill-green_1 w-5" />
               </span>
             ) : (
-              <div></div>
+              <span className="w-8 flex items-center justify-center " />
             )}
-          </div>
-        </div>
-      </div>
-
-      {/* ==== CARDS ESCOLHER CARRO ==== */}
-      <div
-        className="w-auto mt-6 space-y-4 "
-        onClick={() => buscarPorTipoVeiculo("carro")} // está certo aqui
-      >
-        <div className="flex items-center justify-between bg-dark p-4 rounded-xl shadow-md">
-          <div className="flex items-center gap-4">
-            <img
-              src="/assets/img/UberX.png"
-              alt="Carro"
-              className="w-16 h-16"
+            <input
+              type="text"
+              placeholder="Clique nos icones pra buscar"
+              className="input"
+              onFocus={() => setShow(true)}
+              onBlur={() => searchLength === 0 && setShow(false)}
+              onKeyDown={handleSearch}
             />
-            <h2 className="text-gold font-bold mt-2">VAI DE CARRO ##</h2>
           </div>
-        </div>
-      </div>
 
-      {/* ==== CARDS ESCOLHER MOTO ==== */}
-      <div
-        className="w-auto mt-6 space-y-4"
-        onClick={() => buscarPorTipoVeiculo("moto")}
-      >
-        <div className="flex items-center justify-between bg-dark p-4 rounded-xl shadow-md">
-          <div className="flex items-center gap-4">
-            <img
-              src="/assets/img/moto.png"
-              alt="Moto"
-              className="w-16 h-16"
-            />
-            <h2 className="text-blue-700 font-bold mt-2">VAI DE MOTO ##</h2>
-          </div>
-        </div>
-      </div>
+          {/* Botão para buscar "carro" */}
+          <button className="btn" onClick={() => buscar("carro")}>
+            <FilterIcon className="dark:fill-dark_svg_2" />
+          </button>
 
-      {/* ==== CARDS ESCOLHER ENTREGADORES ==== */}
-      <div
-        className="w-auto mt-6 space-y-4"
-        onClick={() => buscarPorTipoVeiculo("entregador")} 
-      >
-        <div className="flex items-center justify-between bg-dark p-4 rounded-xl shadow-md">
-          <div className="flex items-center gap-4">
-            <img
-              src="/assets/img/entregadores.png"
-              alt="Entregador"
-              className="w-16 h-16"
-            />
-            <p className="text-green-700 font-bold mt-2">ENTREGAS ##</p>
-          </div>
+          {/* Botão para buscar "moto" */}
+          <button className="btn" onClick={() => buscar("moto")}>
+            <FilterIcon className="dark:fill-dark_svg_2" />
+          </button>
+
         </div>
       </div>
     </div>
   );
-});
-
-export default Search;
+}

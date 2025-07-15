@@ -30,6 +30,7 @@ export default function SidebarHeader() {
             <li>
               <button className="btn">
                 <CommunityIcon className="dark:fill-dark_svg_1" />
+                
               </button>
             </li>
             <li>
