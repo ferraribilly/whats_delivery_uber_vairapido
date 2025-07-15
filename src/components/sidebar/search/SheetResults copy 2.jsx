@@ -5,10 +5,30 @@ import "leaflet/dist/leaflet.css";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { MapPin, Clock, Map as MapIcon, History } from "lucide-react";
-import { io } from "socket.io-client";
+import { ReturnIcon } from "../../../svg";
 
-export default function SheetResults({ sheetResults, setSheetResults, setSidebarOpen }) {
+
+const pulseStyle = `
+.leaflet-user-icon {
+  animation: pulse 2s infinite;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0.01);
+}
+@keyframes pulse {
+  150% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 72, 197, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(34, 197, 94, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+`;
+
+const markerIcon = "/assets/markers/marker.png";
+const selectedMarkerIcon = "/assets/markers/selected-marker.png";
+const startIcon = "/assets/markers/start.png";
+
+export default function SheetResults({ sheetResults, setSheetResults, setSidebarOpen,setResultados, Search }) {
   const [statusApiHtml, setStatusApiHtml] = useState("");
+  
   const apiURL = process.env.REACT_APP_API_URL || "http://localhost:3005";
   const [markers, setMarkers] = useState([]);
   const mapRef = useRef(null);
@@ -25,6 +45,8 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
   const [ultimoDestino, setUltimoDestino] = useState("");
   const [modoToqueAtivo, setModoToqueAtivo] = useState(false);
   const [showOrigem, setShowOrigem] = useState(false);
+  const [show, setShow] = useState(false);
+  
 
 
   const [sheetHeight, setSheetHeight] = useState(() => window.innerHeight / 2);
@@ -34,61 +56,33 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
   const draggingRef = useRef(false);
   const [formaPagamento, setFormaPagamento] = useState("");
 
-   // Socket ref
-  const socketRef = useRef(null);
+  useEffect(() => {
+    const styleEl = document.createElement("style");
+    styleEl.innerHTML = pulseStyle;
+    document.head.appendChild(styleEl);
+  }, []);
 
- // === Inicialização do mapa ===
   useEffect(() => {
     if (!mapRef.current) {
       mapRef.current = L.map("map", {
         zoomControl: true,
         attributionControl: false,
-      }).setView([-15.78, -47.92], 13);
+      }).setView([-15.78, -47.92], 19);
 
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
-        subdomains: "abcd",
-        maxZoom: 13,
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap",
+        maxZoom: 19,
       }).addTo(mapRef.current);
     }
   }, []);
-
-  // === Conexão socket.io para acompanhar localização dos motoristas ===
-  useEffect(() => {
-    socketRef.current = io(apiURL);
-
-    socketRef.current.on("connect", () => {
-      console.log("Socket conectado, id:", socketRef.current.id);
-    });
-
-    // Evento para receber lista atualizada dos motoristas com localização
-    socketRef.current.on("updateMotoristasLocalizacao", (motoristas) => {
-      // motoristas: array de usuários com tipoVeiculo e location atualizados
-      setSheetResults(motoristas);
-    });
-
-    socketRef.current.on("disconnect", () => {
-      console.log("Socket desconectado");
-    });
-
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
-    };
-  }, [apiURL, setSheetResults]);
-
-  // Atualiza marcadores no mapa quando sheetResults mudar
-  useEffect(() => {
+ useEffect(() => {
     if (!mapRef.current) return;
 
-    // Remove marcadores antigos
     markers.forEach((m) => mapRef.current.removeLayer(m));
     const novos = [];
 
     sheetResults?.forEach((pessoa) => {
-      const temUber = pessoa.tipoVeiculo;
+      const temUber = pessoa.tipoVeiculo  || pessoa.tipoVeiculo;
 
       if (temUber && pessoa.location?.coordinates) {
         const [lng, lat] = pessoa.location.coordinates;
@@ -96,11 +90,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
           .addTo(mapRef.current)
           .bindPopup(
             `<b>${pessoa.name || "Motorista"}</b><br/>Tipo: ${
-              pessoa.tipoVeiculo === "carro"
-                ? "Carro"
-                : pessoa.tipoVeiculo === "moto"
-                ? "Moto"
-                : "Entregador"
+              pessoa.tipoVeiculo ? "Carro" : pessoa.tipoVeiculo ? "Moto" : "Entregador"
             }`
           );
         novos.push(marker);
@@ -122,7 +112,6 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
     setMarkers(novos);
   }, [sheetResults]);
 
-  // Geolocalização do usuário no mapa (mantém seu código original)
   useEffect(() => {
     if (!mapRef.current) return;
     if (!navigator.geolocation) {
@@ -146,9 +135,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
             iconSize: [40, 40],
             className: "",
           });
-          userMarkerRef.current = L.marker([latitude, longitude], { icon })
-            .addTo(mapRef.current)
-            .bindPopup("Você");
+          userMarkerRef.current = L.marker([latitude, longitude], { icon }).addTo(mapRef.current).bindPopup("Você");
         }
         if (!mapRef.current._userCentered) {
           mapRef.current.setView([latitude, longitude], 19);
@@ -167,7 +154,6 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
     };
   }, [user?.picture]);
 
-
   const onDragStart = (e) => {
     draggingRef.current = true;
     startYRef.current = e.touches ? e.touches[0].clientY : e.clientY;
@@ -183,7 +169,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
     if (!draggingRef.current) return;
     const currentY = e.touches ? e.touches[0].clientY : e.clientY;
     const deltaY = startYRef.current - currentY;
-    const newHeight = Math.min(window.innerHeight, Math.max(200, startHeightRef.current + deltaY));
+    const newHeight = Math.min(window.innerHeight, Math.max(100, startHeightRef.current + deltaY));
     setSheetHeight(newHeight);
   };
 
@@ -206,15 +192,14 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
   }, []);
 
   useEffect(() => {
-    axios
-      .get(`${apiURL}`)
-      .then((res) => setStatusApiHtml(res.data))
-      .catch(() =>
-        setStatusApiHtml(
-          "<h1 style='color:red;text-align:center;'>API OFFLINE ❌</h1>"
-        )
-      );
-  }, [apiURL]);
+    const mensagem = "Olá, tudo bem? Seja bem-vindo à Vai Rápido! Estamos abertos 12 horas por dia. É muito fácil e rápido — basta clicar no ícone abaixo e iniciar seu pedido e aqui é seguro, contamos com monitoramento em sistema tempo real whats app bussines Ferrari, aonde aqui é criptografia ponta a ponta.";
+
+    if ("speechSynthesis" in window) {
+      const utter = new SpeechSynthesisUtterance(mensagem);
+      utter.lang = "pt-BR";
+      speechSynthesis.speak(utter);
+    }
+  }, []);
 
   useEffect(() => {
     const getCurrentLocation = async () => {
@@ -295,7 +280,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
 
       rotaLayerRef.current = L.polyline(linha, {
         color: "blue",
-        weight: 5,
+        weight: 10,
         opacity: 0.8,
       }).addTo(mapRef.current);
 
@@ -369,39 +354,32 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
     return minutos < 30 || (minutos >= 30 && minutos < 60) ? percentual : 0;
   };
 
-  const calcularPrecoCarro = () => {
-    if (distancia === null || duracao === null) return "-";
-    const precoPorKm = 2.0;
-    const precoPorMinuto = 0;
-    const taxaFixa = 0.2;
+  const calcularPrecoDinamico = (contact) => {
+    if (!contact || distancia === null || duracao === null) return "-";
+
+    const {
+      precoPorKm = 2.0,
+      precoPorMinuto = 0,
+      taxaFixa = 0.2,
+      descontoHorario = 0,
+    } = contact.taxas || {};
 
     let preco = precoPorKm * distancia + precoPorMinuto * duracao + taxaFixa;
 
-    const desconto = calcularDescontoHorario(0.05);
+    const desconto = calcularDescontoHorario(descontoHorario);
     if (desconto > 0) preco = preco * (1 - desconto);
 
     return `R$ ${preco.toFixed(2)}`;
   };
 
-  const calcularPrecoMoto = () => {
-    if (distancia === null || duracao === null) return "-";
-    const precoPorKm = 2.0;
-    const precoPorMinuto = 0;
-    const taxaFixa = 0.2;
+  const calcularPrecoEntrega = (contact) => {
+    if (!contact || distancia === null || duracao === null) return "-";
 
-    let preco = precoPorKm * distancia + precoPorMinuto * duracao + taxaFixa;
-
-    const desconto = calcularDescontoHorario(0.1);
-    if (desconto > 0) preco = preco * (1 - desconto);
-
-    return `R$ ${preco.toFixed(2)}`;
-  };
-
-  const calcularPrecoEntrega = () => {
-    if (distancia === null || duracao === null) return "-";
-    const precoPorKm = 2.0;
-    const precoPorMinuto = 0.08;
-    const taxaFixa = 0.2;
+    const {
+      precoPorKm = 2.0,
+      precoPorMinuto = 0.08,
+      taxaFixa = 0.2,
+    } = contact.taxas || {};
 
     const preco = precoPorKm * distancia + precoPorMinuto * duracao + taxaFixa;
 
@@ -452,33 +430,30 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
       tipoVeiculo: tipo,
       valorCorrida:
         parseFloat(valorFinal.replace("R$ ", "").replace(",", ".")) || 0,
-         motoristaId: contact._id, 
     };
 
-    try {
+      try {
       await axios.post(`${ENDPOINT}/orders`, dadosViagem);
-      localStorage.setItem("viagem_atual", JSON.stringify(dadosViagem));
-      alert("✅ Pedido criado. Pode escolher o seu motorista e boa viagem.");
     } catch (error) {
       console.error("Erro ao salvar viagem na backend", error);
       alert("Erro ao salvar a viagem. Tente novamente.");
+      return;
     }
+
+    localStorage.setItem("viagem_atual", JSON.stringify(dadosViagem));
+    setSheetResults([]);
+  
   };
+
+
 
   return (
 
     <div className="relative h-screen w-full z-40 overflow-hidden">
       <div id="map" className="absolute top-0 left-0 w-full h-full z-0"></div>
 
-      <div className="relative z-10 p-2">
-        <button
-         
-          className="absolute top-0 right-10 text-gray-600 hover:text-gray-900 transition p-2 rounded-full bg-gray-200 hover:bg-gray-300"
-          aria-label="Fechar mapa"
-        >
-        
-        </button>
-      </div>
+    
+      
 
       <div
         className="absolute top-4 left-4 z-[999] bg-white/80 px-4 py-2 rounded shadow-md max-w-xs"
@@ -486,32 +461,32 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
       />
 
       <button
-        className="absolute top-5 right-400 z-[0] px-4 py-2 bg-transparent text-white rounded shadow"
-        onClick={() => setModoToqueAtivo(!modoToqueAtivo)}
+        className="absolute top-5 right-400 z-[0] px-4 py-2 bg- text-white rounded shadow"
+        // onClick={() => setModoToqueAtivo(!modoToqueAtivo)}
       >
-        {modoToqueAtivo ? "Desativar toque" : "Ativar toque"}
+        {modoToqueAtivo ? "" : ""}
       </button>
 
       <div
         ref={sheetRef}
         style={{
-          position: "absolute",
+          position: "fixed",
           bottom: 0,
           left: 0,
           right: 0,
           height: sheetHeight,
-          backgroundColor: "rgb(255, 238, 1)",
+          backgroundColor: "bg-dark_bg_1 ",
           borderTopLeftRadius: "30px",
           borderTopRightRadius: "30px",
-          boxShadow: "0 -2px 10px rgb(0, 0, 0), 0 0 15px rgba(0,0,0,0.05)",
+          boxShadow: "0 -2px 10px rgba(0, 0, 0, 1), 0 0 15px rgba(1, 14, 137, 1)",
           padding: "16px",
           zIndex: 60,
           display: "flex",
           flexDirection: "column",
           overflowY: "auto",
           transition: "height 0.3s ease",
-          backdropFilter: "blur(8px)",
-          WebkitBackdropFilter: "blur(8px)",
+          backdropFilter: "blur(1px)",
+          WebkitBackdropFilter: "blur(1px)",
         }}
         onMouseDown={onDragStart}
         onTouchStart={onDragStart}
@@ -532,26 +507,10 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
             cursor: "grab",
           }}
         ></div>
-          <ul>
-          {sheetResults && sheetResults.length > 0 ? (
-            sheetResults.map((user) => (
-              <Contact
-                key={user._id}
-                contact={user}
-                setSheetResults={setSheetResults}
-                setSidebarOpen={setSidebarOpen}
-              />
-            ))
-          ) : (
-            <li style={{ padding: "10px", color: "#666", textAlign: "center" }}>
-              Nenhum resultado para mostrar
-            </li>
-          )}
-        </ul>
-
-        <h2 className="text-xl font-bold mb-4 text-center">Pra onde vamos hoje!</h2>
-        <div><span className="font-medium ">Nome:</span > {user?.name}</div>
-        <div><span className="font-medium">Email:</span> {user?.email}</div>
+        
+        <h2 className="text-xl font-bold mb-4 text-green-500 text-center">Pra onde vamos hoje!</h2>
+        <h2 className="text-x font-bold mb-4 text-blue-500 text-center">{user.name}</h2>
+        
 
         {showOrigem && (
           <div className="relative mb-3">
@@ -560,7 +519,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
               value={origem}
               onChange={(e) => setOrigem(e.target.value)}
               placeholder="Meu Local"
-              className="border border-gray-300 rounded-full p-2 pl-10 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="border border-gray-300 rounded-full p-2 pl-10 w-full focus:outline-none focus:ring-2 focus:ring-green-500 "
             />
             <MapIcon className="absolute left-3 top-2.5 text-green-500 animate-bounce" size={20} />
           </div>
@@ -580,7 +539,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
 
         {ultimoDestino && (
           <div className="mb-3">
-            <label className="block mb-1 text-gray-700 font-semibold">Último destino visitado:</label>
+            <label className="block mb-1 text-black font-semibold">Usar ultimo destino:</label>
             <button
               onClick={preencherUltimoDestino}
               className="flex flex-col items-start justify-center gap-1 bg-yellow-300 text-gray-900 py-2 px-4 rounded-xl w-full hover:bg-yellow-400 transition text-left"
@@ -590,7 +549,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
                 <History className="w-5 h-5" />
                 <span className="font-semibold">Repetir último destino</span>
               </div>
-              <span className="text-sm text-gray-800 truncate">{ultimoDestino}</span>
+              <span className="text-sm text-black truncate">{ultimoDestino}</span>
             </button>
           </div>
         )}
@@ -603,13 +562,13 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
             >
               Calcular Valor
             </button>
-            
+           
            
 
             
 
             {distancia !== null && duracao !== null && (
-              <div className="mt-6 flex flex-col items-center justify-center gap-3 text-gray-800">
+              <div className="mt-6 flex flex-col items-center justify-center gap-3 text-blue-600">
                 <div className="flex items-center gap-2 text-lg">
                   <MapPin className="w-5 h-5 text-blue-600" />
                   <span>
@@ -624,9 +583,9 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
                 </div>
                 
 
-                {/* ==== ESCOLHA DE PAGAMENTO ==== */}
+                {/* ==== ESCOLHA DE PAGAMENTO ====
                 <div className="w-full mt-6 space-y-4">
-                  <strong className="block text-gray-800 text-lg">
+                  <strong className="block text-green-800 text-lg">
                     Escolha a forma de pagamento
                   </strong>
                   <div className="flex justify-between bg-white p-4 rounded-xl shadow-md">
@@ -655,18 +614,18 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
                         <img
                           src={`/assets/img/${img}`}
                           alt={label}
-                          className="w-16 h-16 object-contain"
+                          className="w-12 h-12 object-contain"
                         />
                         <span className="mt-2 text-sm text-gray-700">{label}</span>
                       </label>
                     ))}
                   </div>
-                </div>
+                </div> */}
 
                 {/* ==== CARDS ESCOLHER VEÍCULO ==== */}
                 <div className="w-full mt-6 space-y-4">
                   {/* Carros */}
-                  <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-md">
+                  {/* <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-md">
                     <div className="flex items-center gap-4">
                       <img
                         src="/assets/img/UberX.png"
@@ -678,7 +637,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
                           Pop
                         </strong>
                         <p className="text-green-700 font-semibold mt-2">
-                          Valor estimado: {calcularPrecoCarro()}
+                          Valor estimado:{calcularPrecoDinamico(user)}
                         </p>
                       </div>
                     </div>
@@ -688,9 +647,9 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
                     >
                       Selecionar
                     </button>
-                  </div>
+                  </div> */}
 
-                  {/* Motos */}
+                  {/* Motos
                   <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-md">
                     <div className="flex items-center gap-4">
                       <img
@@ -701,7 +660,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
                       <div>
                         <strong className="block text-gray-800 text-lg">Motos</strong>
                         <p className="text-green-700 font-semibold mt-2">
-                          Valor estimado: {calcularPrecoMoto()}
+                        {calcularPrecoDinamico(user)}
                         </p>
                       </div>
                     </div>
@@ -711,9 +670,9 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
                     >
                       Selecionar
                     </button>
-                  </div>
+                  </div> */}
 
-                  {/* Entregadores */}
+                  {/* Entregadores
                   <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-md">
                     <div className="flex items-center gap-4">
                       <img
@@ -726,7 +685,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
                           Entregas
                         </strong>
                         <p className="text-green-700 font-semibold mt-2">
-                          Valor estimado: {calcularPrecoEntrega()}
+                          Valor estimado:{calcularPrecoDinamico(user)}
                         </p>
                       </div>
                     </div>
@@ -736,7 +695,35 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
                     >
                       Selecionar
                     </button>
-                  </div>
+                  </div> */}
+                  
+                  
+                    <ul>
+                      {sheetResults && sheetResults.length > 0 ? (
+                      sheetResults.map((user, tipoVeiculo) => (
+                      <Contact
+                      key={user._id}
+                      contact={user}
+                      formaPagamento={formaPagamento}
+                      setSheetResults={setSheetResults}
+                      setSidebarOpen={setSidebarOpen} 
+                      distancia={distancia}
+                      duracao={duracao}
+                      handleEscolherMotorista={handleEscolherMotorista}
+                      
+                      />
+                      
+
+                     ))
+                      ) : (
+                      <li style={{ padding: "10px", color: "#666", textAlign: "center" }}>
+                       Nenhum resultado para mostrar
+                       
+                      </li>
+                      
+                    )}
+                     </ul>
+
                 </div>
               </div>
             )}

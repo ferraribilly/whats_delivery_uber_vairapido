@@ -1,9 +1,9 @@
-export default function SobreAppIcon({ className, active }) {
+export default function SobreAppIcon({ className }) {
   return (
-    <img
-      src="/assets/img/apps.png"
-      alt={active ? "Story Active Icon" : "Story Default Icon"}
-      className={`scale-105 ${className}`}
+   <img
+      src="/assets/icons/ok.png"
+      alt="Uber Icon"
+      className={` border-[100%] border-white rounded-full ${className}`} // Adicionando borda arredondada
     />
   );
 }

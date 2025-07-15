@@ -16,7 +16,7 @@ const pulseStyle = `
   box-shadow: 0 0 0 rgba(0, 0, 0, 0.01);
 }
 @keyframes pulse {
-  150% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 72, 197, 0.7); }
+  5% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 72, 197, 0.7); }
   70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(34, 197, 94, 0); }
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
 }
@@ -702,6 +702,7 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
                       <Contact
                       key={user._id}
                       contact={user}
+                      tipo={user._tipoVeiculo}
                       formaPagamento={formaPagamento}
                       setSheetResults={setSheetResults}
                       setSidebarOpen={setSidebarOpen} 

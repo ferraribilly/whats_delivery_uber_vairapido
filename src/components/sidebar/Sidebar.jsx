@@ -4,11 +4,13 @@ import { SidebarHeader } from "./header";
 import { Notifications } from "./notifications";
 import { Search, SheetResults } from "./search";
 
-export default function Sidebar({ onlineUsers, typing }) {
+export default function Sidebar({ onlineUsers, typing, onCloseSidebar }) {
   const [sheetResults, setSheetResults] = useState([]);
   const [isOpen, setIsOpen] = useState(true);
+  const [showSidebar, setShowSidebar] = useState(true);
 
   if (!isOpen) return null;
+  if (!showSidebar) return null;
 
   return (
     <div className="w-full h-full select-none bg-white fixed top-0 left-0 z-50 scrollbar overflow-hidden">
@@ -17,20 +19,23 @@ export default function Sidebar({ onlineUsers, typing }) {
       <Search
         searchLength={sheetResults.length}
         setSheetResults={setSheetResults}
+        onSelectConversation={onCloseSidebar}
       />
       
 
-      {sheetResults.length > 0 ? (
+      {sheetResults.length > -1 ? (
         <SheetResults
           sheetResults={sheetResults}
           setSheetResults={setSheetResults}
           setSidebarOpen={setIsOpen}
+          
         />
       ) : (
         <Conversations
           onlineUsers={onlineUsers}
           typing={typing}
           setSidebarOpen={setIsOpen}
+          onSelectConversation={onCloseSidebar}
         />
       )}
     </div>
