@@ -58,7 +58,7 @@ export default function Search({ searchLength, setSheetResults }) {
 
   return (
     <div className="h-[49px] py-1.5">
-      <div className="px-[10px]">
+      <div className="px-[30px]">
         <div className="flex items-center gap-x-2">
           <div className="w-full flex dark:white rounded-lg pl-2">
             {show || searchLength > 0 ? (
@@ -86,11 +86,12 @@ export default function Search({ searchLength, setSheetResults }) {
           </div>
           {/* Botão para buscar "carro" */}
           <button className="btn" onClick={() => handleIconClick("carro")}>
-            <FilterIcon className="dark:fill-dark_svg_2" />
+            <FilterIcon className="dark:fill-dark_svg_2 " />
           </button>
+
           {/* Botão para buscar "moto" */}
           <button className="btn" onClick={() => handleIconClick("moto")}>
-            <FilterIcon className="dark:fill-dark_svg_2" />
+            <CommunityIcon className="dark:fill-dark_svg_2" />
           </button>
         </div>
       </div>

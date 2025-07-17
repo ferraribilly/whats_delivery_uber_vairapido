@@ -7,7 +7,6 @@ import { useSelector } from "react-redux";
 import { MapPin, Clock, Map as MapIcon, History } from "lucide-react";
 import { ReturnIcon } from "../../../svg";
 
-
 const pulseStyle = `
 .leaflet-user-icon {
   animation: pulse 2s infinite;
@@ -16,9 +15,9 @@ const pulseStyle = `
   box-shadow: 0 0 0 rgba(0, 0, 0, 0.01);
 }
 @keyframes pulse {
-  5% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 72, 197, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(34, 197, 94, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+  5% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 72, 197, 0.68); }
+  70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(0, 8, 255, 1); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 55, 0, 1); }
 }
 `;
 
@@ -26,9 +25,22 @@ const markerIcon = "/assets/markers/marker.png";
 const selectedMarkerIcon = "/assets/markers/selected-marker.png";
 const startIcon = "/assets/markers/start.png";
 
-export default function SheetResults({ sheetResults, setSheetResults, setSidebarOpen,setResultados, Search }) {
+function calcularDescontoHorario(percentual) {
+  const agora = new Date();
+  const hora = agora.getHours();
+  return hora >= 12 && hora < 18 ? percentual : 0;
+}
+
+export default function SheetResults({
+  sheetResults,
+  setSheetResults,
+  setSidebarOpen,
+  setResultados,
+  Search,
+  termo,
+}) {
   const [statusApiHtml, setStatusApiHtml] = useState("");
-  
+
   const apiURL = process.env.REACT_APP_API_URL || "http://localhost:3005";
   const [markers, setMarkers] = useState([]);
   const mapRef = useRef(null);
@@ -46,15 +58,14 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
   const [modoToqueAtivo, setModoToqueAtivo] = useState(false);
   const [showOrigem, setShowOrigem] = useState(false);
   const [show, setShow] = useState(false);
-  
-
-
   const [sheetHeight, setSheetHeight] = useState(() => window.innerHeight / 2);
   const sheetRef = useRef(null);
   const startYRef = useRef(0);
   const startHeightRef = useRef(0);
   const draggingRef = useRef(false);
   const [formaPagamento, setFormaPagamento] = useState("");
+
+  
 
   useEffect(() => {
     const styleEl = document.createElement("style");
@@ -75,36 +86,39 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
       }).addTo(mapRef.current);
     }
   }, []);
- useEffect(() => {
+
+  useEffect(() => {
     if (!mapRef.current) return;
 
     markers.forEach((m) => mapRef.current.removeLayer(m));
     const novos = [];
 
-    sheetResults?.forEach((pessoa) => {
-      const temUber = pessoa.tipoVeiculo  || pessoa.tipoVeiculo;
+    sheetResults?.forEach((contact) => {
+      const temUber = contact.tipoVeiculo || contact.tipoVeiculo;
 
-      if (temUber && pessoa.location?.coordinates) {
-        const [lng, lat] = pessoa.location.coordinates;
+      if (temUber && contact.location?.coordinates) {
+        const [lng, lat] = contact.location.coordinates;
         const marker = L.marker([lat, lng])
           .addTo(mapRef.current)
           .bindPopup(
-            `<b>${pessoa.name || "Motorista"}</b><br/>Tipo: ${
-              pessoa.tipoVeiculo ? "Carro" : pessoa.tipoVeiculo ? "Moto" : "Entregador"
+            `<b>${contact.name || "Motorista"}</b><br/>Tipo: ${
+              contact.tipoVeiculo ? "Carro" : contact.tipoVeiculo ? "Moto" : "Entregador"
             }`
           );
         novos.push(marker);
-      } else if (pessoa.location?.coordinates && pessoa.online === true) {
-        const [lng, lat] = pessoa.location.coordinates;
+      } else if (contact.location?.coordinates && contact.online === true) {
+        const [lng, lat] = contact.location.coordinates;
         const icon = L.divIcon({
           html: `<img src="${
-            pessoa.picture ||
+            contact.picture ||
             "https://res.cloudinary.com/dkd5jblv5/image/upload/v1675976806/Default_ProfilePicture_gjngnb.png"
           }" class="leaflet-user-icon" width="40" height="40"/>`,
           iconSize: [40, 40],
           className: "",
         });
-        const marker = L.marker([lat, lng], { icon }).addTo(mapRef.current).bindPopup(`<b>${pessoa.name || "Usuário"}</b>`);
+        const marker = L.marker([lat, lng], { icon })
+          .addTo(mapRef.current)
+          .bindPopup(`<b>${contact.name || "Usuário"}</b>`);
         novos.push(marker);
       }
     });
@@ -135,7 +149,9 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
             iconSize: [40, 40],
             className: "",
           });
-          userMarkerRef.current = L.marker([latitude, longitude], { icon }).addTo(mapRef.current).bindPopup("Você");
+          userMarkerRef.current = L.marker([latitude, longitude], { icon })
+            .addTo(mapRef.current)
+            .bindPopup("Você");
         }
         if (!mapRef.current._userCentered) {
           mapRef.current.setView([latitude, longitude], 19);
@@ -192,16 +208,6 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
   }, []);
 
   useEffect(() => {
-    const mensagem = "Olá, tudo bem? Seja bem-vindo à Vai Rápido! Estamos abertos 12 horas por dia. É muito fácil e rápido — basta clicar no ícone abaixo e iniciar seu pedido e aqui é seguro, contamos com monitoramento em sistema tempo real whats app bussines Ferrari, aonde aqui é criptografia ponta a ponta.";
-
-    if ("speechSynthesis" in window) {
-      const utter = new SpeechSynthesisUtterance(mensagem);
-      utter.lang = "pt-BR";
-      speechSynthesis.speak(utter);
-    }
-  }, []);
-
-  useEffect(() => {
     const getCurrentLocation = async () => {
       if (!navigator.geolocation) return;
 
@@ -241,12 +247,9 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
 
   const geocodeEndereco = async (endereco) => {
     try {
-      const { data } = await axios.get(
-        "https://nominatim.openstreetmap.org/search",
-        {
-          params: { q: endereco, format: "json", limit: 1 },
-        }
-      );
+      const { data } = await axios.get("https://nominatim.openstreetmap.org/search", {
+        params: { q: endereco, format: "json", limit: 1 },
+      });
 
       if (data.length === 0) throw new Error("Endereço não encontrado");
       return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
@@ -298,33 +301,6 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
     }
   };
 
-  const calcularRotaCoordenadas = async ([origem, destino]) => {
-    try {
-      const coords = `${origem[1]},${origem[0]};${destino[1]},${destino[0]}`;
-      const res = await axios.get(`${apiURL}/route/v1/driving/${coords}`, {
-        params: { overview: "full", geometries: "geojson" },
-      });
-
-      const rota = res.data.routes[0];
-      const linha = rota.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
-
-      if (rotaLayerRef.current) rotaLayerRef.current.remove();
-
-      rotaLayerRef.current = L.polyline(linha, {
-        color: "blue",
-        weight: 5,
-        opacity: 0.8,
-      }).addTo(mapRef.current);
-
-      mapRef.current.fitBounds(rotaLayerRef.current.getBounds());
-
-      setDistancia(rota.distance / 1000);
-      setDuracao(rota.duration / 60);
-    } catch (err) {
-      alert("Erro ao calcular rota.");
-    }
-  };
-
   const addMarkers = (origem, destino) => {
     if (markerOrigemRef.current) markerOrigemRef.current.remove();
     if (markerDestinoRef.current) markerDestinoRef.current.remove();
@@ -348,124 +324,33 @@ export default function SheetResults({ sheetResults, setSheetResults, setSidebar
     if (ultimoDestino) setDestino(ultimoDestino);
   };
 
-  const calcularDescontoHorario = (percentual) => {
-    const agora = new Date();
-    const minutos = agora.getMinutes();
-    return minutos < 30 || (minutos >= 30 && minutos < 60) ? percentual : 0;
-  };
+  // Função para calcular preço dinâmico de cada motorista
+  const calcularPrecoDinamico = (motorista) => {
+    if (!motorista || distancia == null || duracao == null) return "R$ 0,00";
 
-  const calcularPrecoDinamico = (contact) => {
-  if (
-    !contact ||
-    origem === null ||
-    destino === null ||
-    contact.tipoVeiculo === null || 
-    distancia === null ||
-    duracao === null
-  ) return "-";
+    const precoPorKm = motorista.precoPorKm || 0;
+    const precoPorMinuto = motorista.precoPorMinuto || 0;
+    const taxaFixa = motorista.taxaFixa || 0;
+    const descontoHorario = motorista.descontoHorario || 0;
 
-  const {
-    precoPorKm = 2.0,
-    precoPorMinuto = 0,
-    taxaFixa = 0.2,
-    descontoHorario = 0,
-  } = contact.taxas || {};
+    let valor = precoPorKm * distancia + precoPorMinuto * duracao + taxaFixa;
+    const desconto = calcularDescontoHorario(descontoHorario);
+    if (desconto > 0) valor *= 1 - desconto;
 
-  let preco = precoPorKm * distancia + precoPorMinuto * duracao + taxaFixa;
-
-  const desconto = calcularDescontoHorario(descontoHorario);
-  if (desconto > 0) preco = preco * (1 - desconto);
-
-  return `R$ ${preco.toFixed(2)}`;
+    return `R$ ${valor.toFixed(2)}`;
 };
-
-
-  const calcularPrecoEntrega = (contact) => {
-    if (!contact || distancia === null || duracao === null) return "-";
-
-    const {
-      precoPorKm = 2.0,
-      precoPorMinuto = 0.08,
-      taxaFixa = 0.2,
-    } = contact.taxas || {};
-
-    const preco = precoPorKm * distancia + precoPorMinuto * duracao + taxaFixa;
-
-    return `R$ ${preco.toFixed(2)}`;
-  };
-
-const handleEscolherMotorista = async (contact, tipo) => {
-  if (!formaPagamento) {
-    alert("Selecione uma forma de pagamento.");
-    return;
-  }
-
-  let valorFinal = "-";
-  if (tipo === "carro" || tipo === "moto") {
-    valorFinal = calcularPrecoDinamico(contact);
-  } else if (tipo === "entregador") {
-    valorFinal = calcularPrecoEntrega(contact);
-  }
-
-  const ENDPOINT = process.env.REACT_APP_API_ENDPOINT || "http://localhost:5000/api/v1";
-
-  const userRedux = user;
-  const userStorage = JSON.parse(localStorage.getItem("user")) || {};
-  const userFinal = {
-    _id: userRedux?._id || userStorage?._id || "usuario-desconhecido",
-    name:
-      userRedux?.name ||
-      userRedux?.nome ||
-      userStorage?.name ||
-      userStorage?.nome ||
-      "Usuário Desconhecido",
-    email:
-      userRedux?.email ||
-      userStorage?.email ||
-      "email@desconhecido.com",
-  };
-
-  const dadosViagem = {
-    origem,
-    destino,
-    distancia,
-    duracao,
-    formaPagamento,
-    tipo,
-    valor: valorFinal,
-    userId: userFinal._id,
-    name: userFinal.name,
-    email: userFinal.email,
-    tipoVeiculo: tipo.toLowerCase(),
-    valorCorrida:
-      parseFloat(valorFinal.replace("R$ ", "").replace(",", ".")) || 0,
-    motoristaId: contact._id,
-  };
-
-  try {
-    await axios.post(`${ENDPOINT}/orders`, dadosViagem);
-  } catch (error) {
-    console.error("Erro ao salvar viagem na backend", error);
-    alert("Erro ao salvar a viagem. Tente novamente.");
-    return;
-  }
-
-  localStorage.setItem("viagem_atual", JSON.stringify(dadosViagem));
-  setShow(false);
-};
-
 
 
   return (
 
-    <div className="relative h-screen w-full z-40 overflow-hidden">
+    <div className="relative h-screen w-full z-0 overflow-hidden">
       <div id="map" className="absolute top-0 left-0 w-full h-full z-0"></div>
 
     
       
 
       <div
-        className="absolute top-4 left-4 z-[999] bg-white/80 px-4 py-2 rounded shadow-md max-w-xs"
+        className="absolute top-4 left-4 z-[999] bg-black/80 px-4 py-2 rounded shadow-md max-w-xs"
         dangerouslySetInnerHTML={{ __html: statusApiHtml }}
       />
 
@@ -485,9 +370,9 @@ const handleEscolherMotorista = async (contact, tipo) => {
           right: 0,
           height: sheetHeight,
           backgroundColor: "bg-dark_bg_1 ",
-          borderTopLeftRadius: "30px",
-          borderTopRightRadius: "30px",
-          boxShadow: "0 -2px 10px rgba(0, 0, 0, 1), 0 0 15px rgba(1, 14, 137, 1)",
+          borderTopLeftRadius: "60px",
+          borderTopRightRadius: "60px",
+          boxShadow: "0 -2px 10px rgba(39, 0, 191, 1), 0 0 15px rgba(1, 14, 137, 1)",
           padding: "16px",
           zIndex: 60,
           display: "flex",
@@ -595,34 +480,37 @@ const handleEscolherMotorista = async (contact, tipo) => {
               
                   
                   
-  <ul>
-  {sheetResults && sheetResults.length > 0 ? (
-    sheetResults.map((user) => (
-      <Contact
-        key={user._id}
-        contact={user}
-        tipoVeiculo={user._tipoVeiculo}
-        formaPagamento={formaPagamento}
-        setSheetResults={setSheetResults}
-        setSidebarOpen={setSidebarOpen}
-        distancia={distancia}
-        duracao={duracao}
-        origem={origem}
-        destino={destino}
-      />
-    ))
-  ) : (
-    <li
-      style={{
-        padding: "10px",
-        color: "#666",
-        textAlign: "center",
-      }}
-    >
-      Nenhum resultado para mostrar
-    </li>
-  )}
-</ul>
+<ul>
+        {sheetResults && sheetResults.length > 0 ? (
+          sheetResults.map((user) => (
+            <Contact
+              key={user._id}
+              contact={user}
+              tipoVeiculo={user.tipoVeiculo}
+              search={Search}
+              resultados={setResultados}
+              formaPagamento={formaPagamento}
+              setSheetResults={setSheetResults}
+              setSidebarOpen={setSidebarOpen}
+              distancia={distancia}
+              duracao={duracao}
+              origem={origem}
+              destino={destino}
+              valorCorridaCalculado={calcularPrecoDinamico(user)} 
+            />
+          ))
+        ) : (
+          <li
+            style={{
+              padding: "10px",
+              color: "#666",
+              textAlign: "center",
+            }}
+          >
+            Nenhum resultado para mostrar
+          </li>
+        )}
+      </ul>
 
                 </div>
       

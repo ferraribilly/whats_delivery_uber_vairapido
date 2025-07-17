@@ -14,9 +14,9 @@ export default function SidebarHeader() {
   return (
     <>
       {/*Sidebar header*/}
-      <div className="h-[80px] dark:bg-white flex items-center p16">
+      <div className="h-[80px]  dark:bg-white flex items-center p16  ">
         {/* container */}
-        <div className="w-full flex items-center justify-between">
+        <div className="w-full flex items-center justify-between ">
           {/*user image*/}
           <button className="btn">
             <img

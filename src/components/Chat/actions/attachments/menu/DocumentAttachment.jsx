@@ -24,6 +24,7 @@ export default function DocumentAttachment() {
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" &&
         file.type !== "application/vnd.rar" &&
         file.type !== "application/zip" &&
+        file.type !== "application/x-zip-compressed" &&
         file.type !== "audio/mpeg" &&
         file.type !== "audio/wav"
       ) {
@@ -56,14 +57,15 @@ export default function DocumentAttachment() {
       >
         <DocumentIcon />
       </button>
-      <input
-        type="file"
-        hidden
-        multiple
-        ref={inputRef}
-        accept="application/*,text/plain"
-        onChange={documentHandler}
-      />
+     <input
+  type="file"
+  hidden
+  multiple
+  ref={inputRef}
+  accept="application/zip,application/x-zip-compressed,application/*,text/plain"
+  onChange={documentHandler}
+/>
+
     </li>
   );
 }

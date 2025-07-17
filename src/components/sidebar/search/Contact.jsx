@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import SocketContext from "../../../context/SocketContext";
@@ -14,6 +14,8 @@ function Contact({
   origem,
   destino,
   tipoVeiculo,
+  valorCorridaCalculado,
+
 }) {
   const [tempoRestante, setTempoRestante] = useState(null);
   const [mostrarReacao, setMostrarReacao] = useState(false);
@@ -23,7 +25,7 @@ function Contact({
 
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user);
-  const { token } = user;
+  const { token } = user || {};
 
   const values = {
     receiver_id: contact._id,
@@ -38,27 +40,6 @@ function Contact({
       setSidebarOpen?.(false);
     }
   };
-
-  const calcularPrecoDinamico = () => {
-    if (!contact || distancia === null || duracao === null) return "-";
-    const {
-      precoPorKm = 2.0,
-      precoPorMinuto = 0,
-      taxaFixa = 0.2,
-      descontoHorario = 0,
-    } = contact.taxas || {};
-
-    const agora = new Date();
-    const minutos = agora.getMinutes();
-    const desconto =
-      minutos < 30 || (minutos >= 30 && minutos < 60) ? descontoHorario : 0;
-
-    let preco = precoPorKm * distancia + precoPorMinuto * duracao + taxaFixa;
-    if (desconto > 0) preco = preco * (1 - desconto);
-
-    return `R$ ${preco.toFixed(2)}`;
-  };
-
   const iniciarContagemRegressiva = () => {
     setTempoRestante(120);
     setMostrarReacao(false);
@@ -76,30 +57,27 @@ function Contact({
     }, 1000);
   };
 
-  const handleEscolherMotorista = async (tipo, contact) => {
+  const handleEscolherMotorista = async () => {
     if (!formaPagamento) {
       alert("Selecione uma forma de pagamento.");
       return;
     }
 
-    let valorFinal = "-";
-    if (tipo === "carro" || tipo === "moto") {
-      valorFinal = calcularPrecoDinamico(contact);
-    } else if (tipo === "entregador") {
-      valorFinal = "R$ 0.00";
-    }
+    const ENDPOINT = process.env.REACT_APP_API_ENDPOINT || "http://localhost:5000/api/v1";
 
-    const ENDPOINT =
-      process.env.REACT_APP_API_ENDPOINT || "http://localhost:5000/api/v1";
-
+    const userRedux = user || {};
     const userStorage = JSON.parse(localStorage.getItem("user")) || {};
     const userFinal = {
-      _id: user._id || userStorage?._id || "usuario-desconhecido",
-      name:
-        user.name || user.nome || userStorage?.name || userStorage?.nome || "Usuário Desconhecido",
-      email:
-        user.email || userStorage?.email || "email@desconhecido.com",
+      _id: userRedux._id || userStorage._id || "usuario-desconhecido",
+      name: userRedux.name || userStorage.name || "Usuário Desconhecido",
+      email: userRedux.email || userStorage.email || "email@desconhecido.com",
     };
+
+    const valorNumber = parseFloat(
+      (typeof valorCorridaCalculado === "string"
+        ? valorCorridaCalculado.replace(/[^\d.,]/g, "").replace(",", ".")
+        : valorCorridaCalculado) || 0
+    );
 
     const dadosViagem = {
       origem,
@@ -107,31 +85,39 @@ function Contact({
       distancia,
       duracao,
       formaPagamento,
-      tipo,
-      valor: valorFinal,
+      tipo: tipoVeiculo,
+      valorCorrida: valorNumber,
+      valor: `R$ ${valorNumber.toFixed(2)}`,
       userId: userFinal._id,
       name: userFinal.name,
       email: userFinal.email,
-      tipoVeiculo: tipo.toLowerCase(),
-      valorCorrida:
-        parseFloat(valorFinal.replace("R$ ", "").replace(",", ".")) || 0,
-      motoristaId: contact._id,
+      motorista: {
+        _id: contact._id,
+        name: contact.name,
+        email: contact.email,
+      },
     };
 
     try {
       await axios.post(`${ENDPOINT}/orders`, dadosViagem);
+
       localStorage.setItem("viagem_atual", JSON.stringify(dadosViagem));
       alert("✅ Pedido criado. Pode escolher o seu motorista e boa viagem.");
       iniciarContagemRegressiva();
     } catch (error) {
-      console.error("Erro ao salvar viagem na backend", error);
-      alert("Erro ao salvar a viagem. Tente novamente.");
+      console.error("Erro ao salvar a viagem:", error);
+      alert("Erro ao salvar a corrida.");
     }
+    
   };
+
+   
+
+
+  
 
   const formatarTempo = (s) =>
     `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
-
 
   return (
     <li className="list-none w-[100vw] h-auto cursor-pointer px-[10px]">
@@ -164,13 +150,16 @@ function Contact({
               </svg>
             ))}
           </div>
+        
 
           <p className="text-sm dark:text-blue-700">{contact.status}</p>
           <p className="text-sm dark:text-blue-700">{contact.tipoVeiculo}</p>
           <h1 className="font-bold text-lg dark:text-black">{contact.marca}</h1>
+          <h1 className="font-bold text-lg dark:text-black">{contact.cor}</h1>
           <h1 className="font-bold text-lg dark:text-black">{contact.placa}</h1>
+
           <h1 className="font-bold text-lg text-green-500">
-            Valor Corrida: {calcularPrecoDinamico()}
+            Valor Corrida: {valorCorridaCalculado || "R$ 0,00"}
           </h1>
 
           <div className="w-full mt-4 px-4">
@@ -202,7 +191,7 @@ function Contact({
 
           {tempoRestante !== null && !mostrarReacao && (
             <div className="w-full px-4 mt-2">
-              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+              <div className="w-full bg-black rounded-full h-3 overflow-hidden">
                 <div
                   className="bg-green-500 h-3"
                   style={{
@@ -211,15 +200,15 @@ function Contact({
                   }}
                 />
               </div>
-              <p className="text-sm text-white mt-1 text-center">
-                Tempo restante: {formatarTempo(tempoRestante)}
+              <p className="font-bold text-lg dark:text-black text-center">
+                Aguarde ele aceitar: {formatarTempo(tempoRestante)}
               </p>
             </div>
           )}
 
           {mostrarReacao && (
             <div className="flex flex-col items-center mt-4 gap-2">
-              <span className="text-white font-semibold text-sm">Deseja tentar novamente?</span>
+              <span className="text-black font-bold ">Deseja tentar novamente?</span>
               <div className="flex gap-4">
                 <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
                   Sim
@@ -233,16 +222,16 @@ function Contact({
 
           <div className="flex gap-2 mt-2">
             <button
-              onClick={() => handleEscolherMotorista(contact.tipoVeiculo, contact)}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm shadow"
+              onClick={handleEscolherMotorista}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-12 py-1 rounded text-sm shadow"
             >
               Solicitação
             </button>
-            <button className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm shadow">
+            <button className="bg-red-500 hover:bg-red-600 text-white px-12 py-1 rounded text-sm shadow">
               Cancelar
             </button>
             <button
-              className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm shadow"
+              className="bg-blue-500 hover:bg-blue-600 text-white px-12 py-1 rounded text-sm shadow"
               onClick={openConversation}
             >
               Chat
