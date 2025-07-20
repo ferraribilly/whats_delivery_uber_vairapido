@@ -2,11 +2,8 @@ import { useSelector } from "react-redux";
 import { checkOnlineStatus, getConversationId } from "../../../utils/chat";
 import Conversation from "./Conversation";
 
-
-export default function Conversations({ onlineUsers, typing, onSelectConversation , onConversationClick}) {
-  const { conversations, activeConversation } = useSelector(
-    (state) => state.chat
-  );
+export default function Conversations({ onlineUsers, typing, onSelectConversation, onConversationClick }) {
+  const { conversations, activeConversation } = useSelector((state) => state.chat);
   const { user } = useSelector((state) => state.user);
 
   return (
@@ -22,8 +19,8 @@ export default function Conversations({ onlineUsers, typing, onSelectConversatio
             )
             .map((convo) => {
               let check = checkOnlineStatus(onlineUsers, user, convo.users);
-               const otherUserId = getConversationId(user, convo.users);
-               const isOnline = onlineUsers.some((u) => u.userId === otherUserId);
+              const otherUserId = getConversationId(user, convo.users);
+              const isOnline = onlineUsers.some((u) => u.userId === otherUserId);
               return (
                 <Conversation
                   key={convo._id}

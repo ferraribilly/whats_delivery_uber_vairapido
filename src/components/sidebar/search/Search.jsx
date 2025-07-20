@@ -1,16 +1,20 @@
 import axios from "axios";
 import { useState } from "react";
 import { useSelector } from "react-redux";
-import { FilterIcon, ReturnIcon, CommunityIcon, SearchIcon } from "../../../svg";
+import {
+  FilterIcon,
+  ReturnIcon,
+  SearchIcon,
+} from "../../../svg";
 
 export default function Search({ searchLength, setSheetResults }) {
   const { user } = useSelector((state) => state.user);
   const { token } = user;
   const [show, setShow] = useState(false);
-  const [searchText, setSearchText] = useState(""); // Estado para controlar o texto da pesquisa
-  const [isBlinking, setIsBlinking] = useState(false); // Estado para controlar o piscar
+  const [searchText, setSearchText] = useState("");
+  const [isBlinking, setIsBlinking] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // Função para buscar por um termo (carro, moto, etc)
   const buscar = async (termo) => {
     if (termo) {
       try {
@@ -25,7 +29,8 @@ export default function Search({ searchLength, setSheetResults }) {
         setSheetResults(data);
       } catch (error) {
         console.log(
-          error?.response?.data?.error?.message || "Erro ao buscar usuários"
+          error?.response?.data?.error?.message ||
+          "Erro ao buscar usuários"
         );
       }
     } else {
@@ -33,35 +38,38 @@ export default function Search({ searchLength, setSheetResults }) {
     }
   };
 
-  // Função que será chamada ao pressionar "Enter" na barra de pesquisa
   const handleSearch = async (e) => {
     if (e.target.value && e.key === "Enter") {
       await buscar(e.target.value);
     }
   };
 
-  // Limpar resultados ao pressionar o botão de retorno
   const clearSearch = () => {
     setSheetResults([]);
-    setSearchText(""); // Limpar texto da pesquisa
+    setSearchText("");
   };
 
-  // Função para lidar com o clique no ícone "carro" ou "moto"
-  const handleIconClick = (termo) => {
+  const handleOptionClick = (termo) => {
     setSearchText(termo);
-    setIsBlinking(true); // Inicia o efeito de piscar
-    setTimeout(() => {
-      setIsBlinking(false); // Para o piscar após um tempo
-    }, 500);
+    setDropdownOpen(false);
+    setIsBlinking(true);
+    setTimeout(() => setIsBlinking(false), 500);
     buscar(termo);
   };
 
+  // Array com texto e caminho da imagem (sem import, caminho relativo ao /public)
+  const opcoes = [
+    { label: "CARRO", imgSrc: "/assets/img/UberX.png" },
+    { label: "MOTO", imgSrc: "/assets/img/moto.png" },
+    { label: "ENTREGADORES", imgSrc: "/assets/img/entregadores.png" },
+  ];
+
   return (
-    <div className="h-[49px] py-1.5">
-      <div className="px-[30px]">
+    <div className="h-[59px] py-1.5 relative">
+      <div className="px-[10px]">
         <div className="flex items-center gap-x-2">
           <div className="w-full flex dark:white rounded-lg pl-2">
-            {show || searchLength > 0 ? (
+            {(show || searchLength > 0) ? (
               <span
                 className="w-8 flex items-center justify-center rotateAnimation cursor-pointer"
                 onClick={clearSearch}
@@ -73,26 +81,48 @@ export default function Search({ searchLength, setSheetResults }) {
                 <SearchIcon className="dark:fill-dark_svg_2 w-5" />
               </span>
             )}
-            <input
+            {/* <input
               type="text"
-              value={searchText} // Valor controlado
-              placeholder="Clique nos ícones para buscar"
-              className={`input ${isBlinking ? "blink" : ""}`} // Aplica o efeito de piscar
+              value={searchText}
+              placeholder="Digite ou escolha uma opção"
+              className={`input ${isBlinking ? "blink" : ""}`}
               onFocus={() => setShow(true)}
               onBlur={() => searchLength === 0 && setShow(false)}
               onKeyDown={handleSearch}
-              readOnly={true} // Impede edição manual, já que os ícones controlam o texto
-            />
+              onChange={(e) => setSearchText(e.target.value)}
+            /> */}
           </div>
-          {/* Botão para buscar "carro" */}
-          <button className="btn" onClick={() => handleIconClick("carro")}>
-            <FilterIcon className="dark:fill-dark_svg_2 " />
-          </button>
 
-          {/* Botão para buscar "moto" */}
-          <button className="btn" onClick={() => handleIconClick("moto")}>
-            <CommunityIcon className="dark:fill-dark_svg_2" />
-          </button>
+          {/* Botão que abre o dropdown */}
+          <div className="relative">
+            <button
+              className="btn"
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+            >
+              <FilterIcon className="dark:fill-dark_svg_2" />
+            </button>
+
+            {dropdownOpen && (
+              <div className="absolute right-0 mt-2 text-white bg-white dark:bg-dark_bg_2 border rounded shadow-lg z-10 w-48">
+                <ul className="text-sm text-left">
+                  {opcoes.map(({ label, imgSrc }) => (
+                    <li
+                      key={label}
+                      className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 dark:hover:bg-dark_hover cursor-pointer"
+                      onClick={() => handleOptionClick(label)}
+                    >
+                      <img
+                        src={imgSrc}
+                        alt={label}
+                        className="w-5 h-5 object-contain"
+                      />
+                      {label}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

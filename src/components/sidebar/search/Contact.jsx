@@ -40,6 +40,7 @@ function Contact({
       setSidebarOpen?.(false);
     }
   };
+
   const iniciarContagemRegressiva = () => {
     setTempoRestante(120);
     setMostrarReacao(false);
@@ -102,7 +103,7 @@ function Contact({
       await axios.post(`${ENDPOINT}/orders`, dadosViagem);
 
       localStorage.setItem("viagem_atual", JSON.stringify(dadosViagem));
-      alert("✅ Pedido criado. Pode escolher o seu motorista e boa viagem.");
+      // alert("✅ Pedido criado. Aguarde ele aceitar pode levar 2 min.");
       iniciarContagemRegressiva();
     } catch (error) {
       console.error("Erro ao salvar a viagem:", error);
@@ -110,6 +111,13 @@ function Contact({
     }
     
   };
+
+
+
+  
+
+
+
 
    
 
@@ -227,9 +235,9 @@ function Contact({
             >
               Solicitação
             </button>
-            <button className="bg-red-500 hover:bg-red-600 text-white px-12 py-1 rounded text-sm shadow">
+            {/* <button className="bg-red-500 hover:bg-red-600 text-white px-12 py-1 rounded text-sm shadow">
               Cancelar
-            </button>
+            </button> */}
             <button
               className="bg-blue-500 hover:bg-blue-600 text-white px-12 py-1 rounded text-sm shadow"
               onClick={openConversation}

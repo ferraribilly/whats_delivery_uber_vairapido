@@ -1,4 +1,4 @@
 import Notifications from "./Notifications";
-import OrdersNotifications from "./OrdersNotifications";
+import OrdersContact from "./OrdersContact";
 
-export { Notifications, OrdersNotifications };
+export { Notifications, OrdersContact };

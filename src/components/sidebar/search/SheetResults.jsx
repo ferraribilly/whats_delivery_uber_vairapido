@@ -5,7 +5,9 @@ import "leaflet/dist/leaflet.css";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { MapPin, Clock, Map as MapIcon, History } from "lucide-react";
-import { ReturnIcon } from "../../../svg";
+// import SocketContext from "../../../context/SocketContext";
+
+
 
 const pulseStyle = `
 .leaflet-user-icon {
@@ -30,6 +32,7 @@ function calcularDescontoHorario(percentual) {
   const hora = agora.getHours();
   return hora >= 12 && hora < 18 ? percentual : 0;
 }
+
 
 export default function SheetResults({
   sheetResults,
@@ -64,6 +67,37 @@ export default function SheetResults({
   const startHeightRef = useRef(0);
   const draggingRef = useRef(false);
   const [formaPagamento, setFormaPagamento] = useState("");
+
+//   const socket = SocketContext(process.env.REACT_APP_API_URL || "http://localhost:3005");
+
+// useEffect(() => {
+//   socket.on("LOCATION_UPDATED", ({ email, location }) => {
+//     console.log("Localização atualizada recebida:", email, location); // 👈 aqui o console.log
+
+//     setSheetResults((prev) => {
+//       return prev.map((user) =>
+//         user.email === email ? { ...user, location } : user
+//       );
+//     });
+//   });
+
+//   return () => {
+//     socket.off("LOCATION_UPDATED");
+//   };
+// }, []);
+
+ useEffect(() => {
+    axios
+      .get(`${apiURL}`)
+      .then((res) => setStatusApiHtml(res.data))
+      .catch(() =>
+        setStatusApiHtml(
+          ""
+        )
+      );
+  }, [apiURL]);
+
+
 
   
 
@@ -259,47 +293,77 @@ export default function SheetResults({
     }
   };
 
+  const salvarRotaNoBackend = async (rota) => {
+  try {
+    await axios.post(`${apiURL}/rotas/salvar`, {
+      userId: user._id,
+      name: user.name,
+      email: user.email,
+      origem,
+      destino,
+      distancia,
+      duracao,
+      geometry: rota.geometry,
+    });
+    setStatusApiHtml("Rota salva!");
+  } catch (err) {
+    setStatusApiHtml("Erro ao salvar rota.");
+    console.error("Erro ao salvar rota no backend:", err);
+  }
+};
+
+
+
+
+
+
+
+
   const calcularRota = async () => {
-    if (!origem || !destino) return alert("Preencha origem e destino!");
+  if (!origem || !destino) return alert("Preencha origem e destino!");
 
-    try {
-      setDistancia(null);
-      setDuracao(null);
+  try {
+    setDistancia(null);
+    setDuracao(null);
 
-      const coordOrigem = await geocodeEndereco(origem);
-      const coordDestino = await geocodeEndereco(destino);
+    const coordOrigem = await geocodeEndereco(origem);
+    const coordDestino = await geocodeEndereco(destino);
 
-      addMarkers(coordOrigem, coordDestino);
+    addMarkers(coordOrigem, coordDestino);
 
-      const coords = `${coordOrigem[1]},${coordOrigem[0]};${coordDestino[1]},${coordDestino[0]}`;
-      const res = await axios.get(`${apiURL}/route/v1/driving/${coords}`, {
-        params: { overview: "full", geometries: "geojson" },
-      });
+    const coords = `${coordOrigem[1]},${coordOrigem[0]};${coordDestino[1]},${coordDestino[0]}`;
+    const res = await axios.get(`${apiURL}/route/v1/driving/${coords}`, {
+      params: { overview: "full", geometries: "geojson" },
+    });
 
-      const rota = res.data.routes[0];
-      const linha = rota.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+    const rota = res.data.routes[0];
+    const linha = rota.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
 
-      if (rotaLayerRef.current) rotaLayerRef.current.remove();
+    if (rotaLayerRef.current) rotaLayerRef.current.remove();
 
-      rotaLayerRef.current = L.polyline(linha, {
-        color: "blue",
-        weight: 10,
-        opacity: 0.8,
-      }).addTo(mapRef.current);
+    rotaLayerRef.current = L.polyline(linha, {
+      color: "blue",
+      weight: 10,
+      opacity: 0.8,
+    }).addTo(mapRef.current);
 
-      mapRef.current.fitBounds(rotaLayerRef.current.getBounds());
+    mapRef.current.fitBounds(rotaLayerRef.current.getBounds());
 
-      setDistancia(rota.distance / 1000);
-      setDuracao(rota.duration / 60);
+    setDistancia(rota.distance / 1000);
+    setDuracao(rota.duration / 60);
 
-      if (destino !== ultimoDestino) {
-        localStorage.setItem("ultimo_destino", destino);
-        setUltimoDestino(destino);
-      }
-    } catch (err) {
-      alert("Erro ao calcular rota.");
+    if (destino !== ultimoDestino) {
+      localStorage.setItem("ultimo_destino", destino);
+      setUltimoDestino(destino);
     }
-  };
+
+    await salvarRotaNoBackend(rota);
+
+  } catch (err) {
+    alert("Erro ao calcular rota.");
+  }
+};
+
 
   const addMarkers = (origem, destino) => {
     if (markerOrigemRef.current) markerOrigemRef.current.remove();
@@ -344,16 +408,11 @@ export default function SheetResults({
   return (
 
     <div className="relative h-screen w-full z-0 overflow-hidden">
-      <div id="map" className="absolute top-0 left-0 w-full h-full z-0"></div>
-
-    
-      
-
+    <div id="map" className="absolute top-0 left-0 w-full h-full z-0"></div>
       <div
         className="absolute top-4 left-4 z-[999] bg-black/80 px-4 py-2 rounded shadow-md max-w-xs"
         dangerouslySetInnerHTML={{ __html: statusApiHtml }}
       />
-
       <button
         className="absolute top-5 right-400 z-[0] px-4 py-2 bg- text-white rounded shadow"
         // onClick={() => setModoToqueAtivo(!modoToqueAtivo)}
@@ -511,6 +570,7 @@ export default function SheetResults({
           </li>
         )}
       </ul>
+      
 
                 </div>
       
