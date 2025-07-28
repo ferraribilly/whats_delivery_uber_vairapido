@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useRef,
@@ -13,7 +12,6 @@ import "leaflet/dist/leaflet.css";
 import { Search, SearchResults } from "./search";
 import { useSelector } from "react-redux";
 import SocketContext from "../../context/SocketContext";
-import { ContactIcon } from "../../svg";
 
 const pulseStyle = `
 .leaflet-user-icon {
@@ -37,7 +35,7 @@ export default function Sidebar({
   externalRotaLayerRef,
   externalMarkerOrigemRef,
   externalMarkerDestinoRef,
-  
+  contact,
 }) {
   const [searchResults, setSearchResults] = useState([]);
   const [isOpen] = useState(true);
@@ -53,12 +51,6 @@ export default function Sidebar({
   const internalMapRef = useRef(null);
   const mapRef = externalMapRef || internalMapRef;
   const userMarkerRef = useRef(null);
-
-  const { contact } = user;
-
-  
-   
-
 
   useEffect(() => {
     const styleEl = document.createElement("style");
@@ -81,65 +73,44 @@ export default function Sidebar({
   }, [mapRef]);
 
   useEffect(() => {
-  if (!mapRef.current) return;
+    if (!mapRef.current) return;
 
-  // Remove os marcadores antigos do mapa
-  markers.forEach((m) => mapRef.current.removeLayer(m));
-  const novos = [];
+    markers.forEach((m) => mapRef.current.removeLayer(m));
+    const novos = [];
 
-  onlineUsers?.forEach((users) => {
-    if (!users.location?.coordinates) return;
-    if (users._id === users?._id) return; // Ignora o próprio usuário
+    searchResults?.forEach((contact) => {
+      const contactLocation = contact.tipoVeiculo;
 
-    const [lng, lat] = contact.location.coordinates;
+      if (contactLocation && contact.location?.coordinates) {
+        const [lng, lat] = contact.location.coordinates;
 
-    // Se o contact tem tipoVeiculo, trata como motorista
-    if (users.tipoVeiculo === "carro" || users.tipoVeiculo === "moto") {
-      const iconUrl =
-        users.tipoVeiculo === "carro"
-          ? "/assets/img/UberX.png"
-          : "/assets/img/moto.png";
+        const marker = L.marker([lat, lng])
+          .addTo(mapRef.current)
+          .bindPopup(
+            `<b>${contact.name || "Contact"}</b><br/>Tipo: ${
+              contact.tipoVeiculo ? "carro" : "moto"
+            }`
+          );
+        novos.push(marker);
+      } else if (contact.location?.coordinates && contact.users === true) {
+        const [lng, lat] = contact.location.coordinates;
+        const icon = L.divIcon({
+          html: `<img src="${
+            contact.picture ||
+            "https://res.cloudinary.com/dkd5jblv5/image/upload/v1675976806/Default_ProfilePicture_gjngnb.png"
+          }" class="leaflet-user-icon" width="40" height="40"/>`,
+          iconSize: [40, 40],
+          className: "",
+        });
+        const marker = L.marker([lat, lng], { icon })
+          .addTo(mapRef.current)
+          .bindPopup(`<b>${contact.name || "Usuário"}</b>`);
+        novos.push(marker);
+      }
+    });
 
-      const icon = L.icon({
-        iconUrl,
-        iconSize: [30, 30],
-        className: "",
-      });
-
-      const marker = L.marker([lat, lng], { icon })
-        .addTo(mapRef.current)
-        .bindPopup(
-          `<b>${users?.name || "Sem nome"}</b><br/>
-           Veículo: ${users?.tipoVeiculo}<br/>
-           user: ${users._id}`
-        );
-
-      novos.push(marker);
-    } else {
-      // Usuário comum (passageiro, sem veículo)
-      const icon = L.divIcon({
-        html: `<img src="${
-          users.picture ||
-          "/assets/img/UberX.png"
-        }" class="leaflet-user-icon" width="12" height="12"/>`,
-        iconSize: [30, 30],
-        className: "",
-      });
-
-      const marker = L.marker([lat, lng], { icon })
-        .addTo(mapRef.current)
-        .bindPopup(
-          `<b>${users?.name || "Testando"}</b><br/>
-           user: ${users._id}`
-        );
-
-      novos.push(marker);
-    }
-  });
-
-  setMarkers(novos);
-}, [onlineUsers, mapRef]);
-
+    setMarkers(novos);
+  }, [searchResults, mapRef]);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -177,7 +148,7 @@ export default function Sidebar({
           });
           userMarkerRef.current = L.marker([latitude, longitude], { icon })
             .addTo(mapRef.current)
-            .bindPopup(`<b>${user?.name || "Você"}</b><br/>ID: ${user?._id} `);
+            .bindPopup(`<b>${user?.name || "Você"}</b>`);
         }
 
         if (!mapRef.current._userCentered) {
@@ -194,7 +165,7 @@ export default function Sidebar({
     return () => {
       navigator.geolocation.clearWatch(watchId);
     };
-  }, [user?._id, user?.picture, user?.name, user?.tipoVeiculo, mapRef, socket]);
+  }, [user?._id, user?.picture, user?.name, mapRef, socket]);
 
   if (!isOpen || !showSidebar) return null;
 

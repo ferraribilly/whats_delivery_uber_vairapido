@@ -8,7 +8,7 @@ import {
   SearchIcon,
 } from "../../../svg";
 
-export default function Search({ searchLength, setSearchResults }) {
+export default function Search({ searchLength, setSheetResults }) {
   const { user } = useSelector((state) => state.user);
   const { token } = user;
   const [show, setShow] = useState(false);
@@ -27,7 +27,7 @@ export default function Search({ searchLength, setSearchResults }) {
             },
           }
         );
-        setSearchResults(data);
+        setSheetResults(data);
       } catch (error) {
         console.log(
           error?.response?.data?.error?.message ||
@@ -35,7 +35,7 @@ export default function Search({ searchLength, setSearchResults }) {
         );
       }
     } else {
-      setSearchResults([]);
+      setSheetResults([]);
     }
   };
 
@@ -46,7 +46,7 @@ export default function Search({ searchLength, setSearchResults }) {
   };
 
   const clearSearch = () => {
-    setSearchResults([]);
+    setSheetResults([]);
     setSearchText("");
   };
 
@@ -102,11 +102,11 @@ export default function Search({ searchLength, setSearchResults }) {
               className="btn"
               onClick={() => setDropdownOpen(!dropdownOpen)}
             >
-              <FilterIcon className="dark:fill-dark_svg_2 " />
+              <FilterIcon className="dark:fill-dark_svg_2" />
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 mt-2 text-white bg-white dark:bg-dark_bg_2 border rounded shadow-lg z-10 w-48 z-[999]">
+              <div className="absolute right-0 mt-2 text-white bg-white dark:bg-dark_bg_2 border rounded shadow-lg z-10 w-48">
                 <ul className="text-sm text-left">
                   {opcoes.map(({ label, imgSrc }) => (
                     <li

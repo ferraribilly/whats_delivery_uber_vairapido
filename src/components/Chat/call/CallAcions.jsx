@@ -1,3 +1,8 @@
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+
+
 import {
   ArrowIcon,
   DialIcon,
@@ -10,7 +15,7 @@ export default function CallAcions({ endCall }) {
   return (
     <div className="h-22 w-full absolute bottom-0 z-40 px-1">
       {/*Container*/}
-      <div className="relative bg-[#222] px-4 pt-6 pb-12 rounded-xl">
+      <div className="relative bg-[] px-4 pt-6 pb-12 rounded-xl">
         {/*Expand icon*/}
         <button className="-rotate-90 scale-y-[300%] absolute top-1 left-1/2">
           <ArrowIcon className="fill-dark_svg_2" />

@@ -2,9 +2,9 @@ import { AddContactIcon, ArrowIcon, LockIcon } from "../../../svg";
 
 export default function Header() {
   return (
-    <header className="absolute top-0 w-full z-40">
+    <header className="absolute top-0 w-full z-40 z-[999]">
       {/*Header container*/}
-      <div className="p-1 flex items-center justify-between">
+      <div className="p-1 flex items-center justify-between z-[999]">
         {/*Return button*/}
         <button className="btn">
           <span className="rotate-180 scale-150">

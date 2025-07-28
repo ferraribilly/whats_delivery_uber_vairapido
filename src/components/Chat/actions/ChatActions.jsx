@@ -40,7 +40,7 @@ function ChatActions({ socket }) {
   return (
     <form
       onSubmit={(e) => SendMessageHandler(e)}
-      className="dark:bg-dark_bg_2 h-[60px] w-full flex items-center absolute bottom-0 py-2 px-4 select-none"
+      className="dark:bg-white h-[80px] w-full flex items-center absolute bottom-0 py-2 px-4 select-none"
     >
       {/*Container*/}
       <div className="w-full flex items-center gap-x-2">

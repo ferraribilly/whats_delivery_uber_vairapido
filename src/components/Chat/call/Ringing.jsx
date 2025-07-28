@@ -21,7 +21,7 @@ export default function Ringing({ call, setCall, answerCall, endCall }) {
   return (
     <div className="dark:bg-dark_bg_1 rounded-lg fixed  top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-lg z-30">
       {/*Container*/}
-      <div className="p-4 flex items-center justify-between gap-x-8">
+      <div className="p-4 flex items-center justify-between gap-x-8 z-[999]">
         {/*Call infos*/}
         <div className="flex items-center gap-x-2">
           <img

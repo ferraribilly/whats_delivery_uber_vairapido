@@ -20,10 +20,11 @@ export default function Call({
   const { receiveingCall, callEnded, name, picture } = call;
   const [showActions, setShowActions] = useState(false);
   const [toggle, setToggle] = useState(false);
+
   return (
     <>
       <div
-        className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[550px] z-10 rounded-2xl overflow-hidden callbg
+        className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100%] h-[100%] z-[999] rounded-2xl overflow-hidden callbg
         ${receiveingCall && !callAccepted ? "hidden" : ""}
         `}
         onMouseOver={() => setShowActions(true)}
@@ -44,9 +45,9 @@ export default function Call({
             {/*Call actions*/}
             {showActions ? <CallAcions endCall={endCall} /> : null}
           </div>
-          {/*Video streams*/}
+
+          {/* --- Removido vídeo: chamadas somente por áudio --- */}
           <div>
-            {/*user video*/}
             {callAccepted && !callEnded ? (
               <div>
                 <video
@@ -59,7 +60,6 @@ export default function Call({
                 ></video>
               </div>
             ) : null}
-            {/*my video*/}
             {stream ? (
               <div>
                 <video
@@ -77,6 +77,7 @@ export default function Call({
           </div>
         </div>
       </div>
+
       {/*Ringing*/}
       {receiveingCall && !callAccepted ? (
         <Ringing
@@ -86,6 +87,7 @@ export default function Call({
           endCall={endCall}
         />
       ) : null}
+
       {/*calling ringtone*/}
       {!callAccepted && show ? (
         <audio src="../../../../audio/ringing.mp3" autoPlay loop></audio>

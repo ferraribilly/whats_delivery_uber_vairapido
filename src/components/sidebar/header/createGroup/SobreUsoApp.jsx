@@ -3,7 +3,7 @@ import { ReturnIcon } from "../../../../svg";
 
 export default function SobreUsoApp({ setShowSobreUsoApp }) {
   return (
-    <div className="createGroupAnimation relative h-full z-40 p-6 overflow-y-auto">
+    <div className="createGroupAnimation relative h-full z-40 p-6 overflow-y-auto z-[999]">
       {/* Botão Fechar */}
       <button
         onClick={() => setShowSobreUsoApp(false)}

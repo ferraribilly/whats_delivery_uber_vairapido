@@ -61,10 +61,10 @@ export default function Add() {
     <>
       <div
         onClick={() => inputRef.current.click()}
-        className="w-14 h-14 mt-2 border dark:border-white rounded-md flex items-center justify-center cursor-pointer"
+        className="w-14 h-14 mt-2 border dark:border-white rounded-md flex items-center justify-center cursor-pointer z-[999]"
       >
         <span className="rotate-45">
-          <CloseIcon className="dark:fill-dark_svg_1" />
+          <CloseIcon className="dark:fill-dark_svg_1 z-[999]" />
         </span>
       </div>
       <input

@@ -5,7 +5,8 @@ import axios from "axios";
 
 export default function MinhaConta({ setShowMinhaConta }) {
   const userData = useSelector((state) => state.user.user);
-
+   
+  
   const [status, setStatus] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -37,7 +38,7 @@ export default function MinhaConta({ setShowMinhaConta }) {
   }, [userData]);
 
   return (
-    <div className="createGroupAnimation relative h-full z-40 p-6">
+    <div className="createGroupAnimation relative h-full z-40 p-6 z-[999]">
       <button
         onClick={() => setShowMinhaConta(false)}
         className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 transition p-2 rounded-full bg-gray-200 hover:bg-gray-300"
@@ -49,6 +50,11 @@ export default function MinhaConta({ setShowMinhaConta }) {
       <div className="max-h-[calc(100vh-80px)] overflow-y-auto pt-10">
         <form className="space-y-6 bg-dark_bg_2 p-6 rounded-xl shadow-lg max-w-md mx-auto">
           <h2 className="text-xl font-bold text-white mb-4">Uber</h2>
+          
+
+          
+           
+          
 
           <div className="flex flex-col">
            

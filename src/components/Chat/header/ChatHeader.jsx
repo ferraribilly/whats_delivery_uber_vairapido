@@ -2,6 +2,7 @@ import { useSelector } from "react-redux";
 import {
   CallIcon,
   DotsIcon,
+  ReturnIcon,
   SearchLargeIcon,
   VideoCallIcon,
 } from "../../../svg";
@@ -12,17 +13,24 @@ import Peer from "simple-peer";
 import {
   getConversationName,
   getConversationPicture,
+  
 } from "../../../utils/chat";
-function ChatHeader({ online, callUser, socket }) {
+function ChatHeader({ online, callUser, socket, onBack }) {
   const { activeConversation } = useSelector((state) => state.chat);
   const { user } = useSelector((state) => state.user);
 
   return (
-    <div className="h-[59px] dark:bg-dark_bg_2 flex items-center p16 select-none">
+    
+    <div className="h-[80px] dark:bg-dark_bg_2 flex items-center p16 select-none">
+      
       {/*Container*/}
       <div className="w-full flex items-center justify-between">
         {/*left*/}
-        <div className="flex items-center gap-x-4">
+        <div className="flex items-center top-5 gap-x-1">
+        
+         
+         
+
           {/*Conversation image*/}
           <button className="btn">
             <img
@@ -37,45 +45,55 @@ function ChatHeader({ online, callUser, socket }) {
           </button>
           {/*Conversation name and online status*/}
           <div className="flex flex-col">
-            <h1 className="dark:text-white text-md font-bold">
+            <h1 className="dark:text-blue-600 text-md  font-bold">
               {activeConversation.isGroup
                 ? activeConversation.name
+                
                 : capitalize(
                     getConversationName(user, activeConversation.users).split(
                       " "
                     )[0]
                   )}
             </h1>
-            <span className="text-xs dark:text-dark_svg_2">
+            <span className="text-xs dark:text-green-600">
               {online ? "online" : ""}
             </span>
           </div>
         </div>
-        {/*Right*/}
+
+
+        {/*Right  Vai Ser usado modo Privado*/}
         <ul className="flex items-center gap-x-2.5">
+           <button
+              className="btn"
+              onClick={() => onBack && onBack()}
+              title="sheetResults"
+            >
+              <ReturnIcon className="dark:fill-dark_svg_1" />
+            </button>
           {1 == 1 ? (
             <li onClick={() => callUser()}>
-              <button className="btn">
+              {/* <button className="btn">
                 <VideoCallIcon />
-              </button>
+              </button> */}
             </li>
           ) : null}
           {1 == 1 ? (
             <li>
-              <button className="btn">
+              {/* <button className="btn">
                 <CallIcon />
-              </button>
+              </button> */}
             </li>
           ) : null}
           <li>
-            <button className="btn">
+            {/* <button className="btn">
               <SearchLargeIcon className="dark:fill-dark_svg_1" />
-            </button>
+            </button> */}
           </li>
           <li>
-            <button className="btn">
+            {/* <button className="btn">
               <DotsIcon className="dark:fill-dark_svg_1" />
-            </button>
+            </button> */}
           </li>
         </ul>
       </div>

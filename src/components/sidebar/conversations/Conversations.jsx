@@ -7,7 +7,7 @@ export default function Conversations({ onlineUsers, typing, onSelectConversatio
   const { user } = useSelector((state) => state.user);
 
   return (
-    <div className="convos scrollbar">
+    <div className="convos scrollbar z-[] relative">
       <ul>
         {conversations &&
           conversations

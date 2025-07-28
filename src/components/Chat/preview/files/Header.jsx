@@ -8,18 +8,18 @@ export default function Header({ activeIndex }) {
     dispatch(clearFiles());
   };
   return (
-    <div className="w-full ">
+    <div className="w-full z-[9999]">
       {/*Container*/}
-      <div className="w-full flex items-center justify-between">
+      <div className="w-full flex items-center justify-between z-[9999]">
         {/*Close icon / empty files*/}
         <div
-          className="translate-x-4 cursor-pointer"
+          className="translate-x-4 cursor-pointer z-[999]"
           onClick={() => clearFilesHandler()}
         >
-          <CloseIcon className="dark:fill-dark_svg_1" />
+          <CloseIcon className="dark:fill-dark_svg_1 z-[999]" />
         </div>
         {/* File name */}
-        <h1 className="dark:text-dark_text_1 text-[15px]">
+        <h1 className="dark:text-dark_text_1 text-[15px] z-[999]">
           {files[activeIndex]?.file?.name}
         </h1>
         {/*Empty tag*/}

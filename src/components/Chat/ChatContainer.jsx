@@ -7,7 +7,7 @@ import ChatHeader from "./header/ChatHeader";
 import ChatMessages from "./messages/ChatMessages";
 import FilesPreview from "./preview/files/FilesPreview";
 
-export default function ChatContainer({ onlineUsers, typing, callUser }) {
+export default function ChatContainer({ onlineUsers, typing, callUser, onBack }) {
   const dispatch = useDispatch();
   const { activeConversation, files } = useSelector((state) => state.chat);
   const { user } = useSelector((state) => state.user);
@@ -22,7 +22,7 @@ export default function ChatContainer({ onlineUsers, typing, callUser }) {
     }
   }, [activeConversation]);
   return (
-    <div className="relative w-full h-full border-l dark:border-l-dark_border_2 select-none overflow-hidden ">
+      <div className="w-full h-full select-none z-[9999]  fixed top-0 left-0 scrollbar overflow-hidden">
       {/*Container*/}
       <div>
         {/*Chat header*/}
@@ -32,6 +32,8 @@ export default function ChatContainer({ onlineUsers, typing, callUser }) {
               ? false
               : checkOnlineStatus(onlineUsers, user, activeConversation.users)
           }
+          
+          onBack={onBack}
           callUser={callUser}
         />
         {files.length > 0 ? (

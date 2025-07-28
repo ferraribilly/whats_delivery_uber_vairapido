@@ -1,8 +1,14 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
+//novos endpoint adicionados aqui 
+const CONVERSATION_ENDPOINT_SEND =  `${process.env.REACT_APP_API_ENDPOINT}/send`;
+const CONVERSATION_ENDPOINT_PENDING =  `${process.env.REACT_APP_API_ENDPOINT}/pending`;
+const CONVERSATION_ENDPOINT_RESPOND =  `${process.env.REACT_APP_API_ENDPOINT}/respond`;
+// existentes 
 const CONVERSATION_ENDPOINT = `${process.env.REACT_APP_API_ENDPOINT}/conversation`;
 const MESSAGE_ENDPOINT = `${process.env.REACT_APP_API_ENDPOINT}/message`;
+
 
 const initialState = {
   status: "",
@@ -30,6 +36,13 @@ export const getConversations = createAsyncThunk(
     }
   }
 );
+
+
+
+
+
+
+//open_create_conversation
 export const open_create_conversation = createAsyncThunk(
   "conervsation/open_create",
   async (values, { rejectWithValue }) => {
@@ -51,6 +64,7 @@ export const open_create_conversation = createAsyncThunk(
   }
 );
 
+//getConversationMessages
 export const getConversationMessages = createAsyncThunk(
   "conervsation/messages",
   async (values, { rejectWithValue }) => {
@@ -67,6 +81,7 @@ export const getConversationMessages = createAsyncThunk(
     }
   }
 );
+//sendMessage
 export const sendMessage = createAsyncThunk(
   "message/send",
   async (values, { rejectWithValue }) => {
@@ -91,6 +106,8 @@ export const sendMessage = createAsyncThunk(
     }
   }
 );
+
+
 
 export const createGroupConversation = createAsyncThunk(
   "conervsation/create_group",
